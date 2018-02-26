@@ -12,8 +12,6 @@ protected:
     QMutex  mutex;
     QString audioFileName;
     QString title;
-    float volume;
-    qint32 restartOffset;
 public:
     AudioBuffer(void);
     AudioBuffer(const AudioBuffer & buffer, QObject *parent = Q_NULLPTR);
@@ -31,23 +29,14 @@ public:
     {
         audioFileName.clear();
     }
-    virtual qint32 getRestartOffset(void)
-    {
-        return restartOffset;
-    }
-    void setRestartOffset(qint32 offset)
-    {
-        restartOffset = offset;
-    }
     inline qint64 duration()
     {
         return durationForBytes(size());
     }
     inline qint32 frameCount(void)
     {
-            return size()/bytesPerFrame();
+        return size()/bytesPerFrame();
     }
-    float  getVolume(void);
     short *getFrame(int n);
     char  *getFramePtr(int n);
     void SaveAppend(const QByteArray & ba)
@@ -60,7 +49,6 @@ public:
         return mutex;
     }
     //
-    bool FillScaled(int v, AudioBuffer ** scaled);
     AudioBuffer * selectChannel(int ch);
     //
     void clearChannel(int ch);

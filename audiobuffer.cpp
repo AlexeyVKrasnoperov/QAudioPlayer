@@ -4,11 +4,9 @@ using namespace std;
 
 AudioBuffer::AudioBuffer(void)
 {
-    volume = -1;
-    restartOffset = -1;
     setCodec("audio/pcm");
     setByteOrder(QAudioFormat::LittleEndian);
-    setSampleRate(441000);
+    setSampleRate(44100);
     setSampleSize(16);
     setSampleType(QAudioFormat::SignedInt);
     setChannelCount(2);
@@ -17,15 +15,11 @@ AudioBuffer::AudioBuffer(void)
 AudioBuffer::AudioBuffer(const AudioBuffer & buffer, QObject *parent): QObject(parent), QAudioFormat(buffer), QByteArray(buffer)
 {
     audioFileName = buffer.audioFileName;
-    volume = buffer.volume;
-    restartOffset = buffer.restartOffset;
     title = buffer.title;
 }
 
 AudioBuffer::AudioBuffer(const AudioBuffer & buffer, int size):QAudioFormat(buffer),QByteArray(size,0)
 {
-    volume = -1;
-    restartOffset = -1;
 }
 
 
@@ -46,45 +40,6 @@ char *AudioBuffer::getFramePtr(int n)
 short *AudioBuffer::getFrame(int n)
 {
     return (short*)(getFramePtr(n));
-}
-
-bool AudioBuffer::FillScaled(int v, AudioBuffer ** scaled)
-{
-    if( isEmpty() )
-        return false;
-    bool isNew = false;
-    if( *scaled != 0 )
-    {
-        if( (*scaled)->size() != size() )
-        {
-            delete *scaled;
-            *scaled = 0;
-        }
-    }
-    if( *scaled == 0 )
-    {
-        *scaled = new AudioBuffer(*this);
-        isNew = true;
-    }
-    double scale = double(v)/getVolume();
-    short * d = (short*) data();
-    short * s = (short*) (*scaled)->data();
-    int sz = size()/sizeof(short);
-    for(int i = 0; i < sz; i++, s++, d++)
-    {
-        int v = qRound(scale*(*d));
-        *s = (v > 0) ? qMin(SHRT_MAX,v) : qMax(SHRT_MIN,v);
-    }
-    return isNew;
-}
-
-float AudioBuffer::getVolume(void)
-{
-    if( isEmpty() )
-        return -1;
-    if( volume < 0 )
-        volume = 100.*findAbsMax(*this)/float(SHRT_MAX);
-    return volume;
 }
 
 AudioBuffer * AudioBuffer::selectChannel(int ch)

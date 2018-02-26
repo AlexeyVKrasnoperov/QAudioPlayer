@@ -3,20 +3,35 @@
 #include <QAudioOutput>
 #include <QIODevice>
 #include "audiobuffer.h"
+#include "audiofilereader.h"
+#include <QDebug>
 
-Player::Player(int ms)
+Player::Player(void)
 {
     output = 0;
     device = 0;
-    restartOffset  = -1;
-    notifyInterval = ms;
+    audioBuffer = 0;
+    fileLoader  = 0;
+    notifyInterval = -1;
     autoRestart = false;
+    outputAudioDeviceInfo = QAudioDeviceInfo::defaultOutputDevice();
 }
 
 Player::~Player(void)
 {
     close();
 }
+
+bool Player::open(const QString & name)
+{
+    if( fileLoader == 0 )
+    {
+        fileLoader = new AudioFileLoader();
+        connect(fileLoader,SIGNAL(ready(AudioBuffer*)),this,SLOT(bufferReadySlot(AudioBuffer*)));
+    }
+    return fileLoader->Load(name);
+}
+
 
 void Player::close(void)
 {
@@ -37,37 +52,28 @@ void Player::close(void)
         delete device;
         device = 0;
     }
+    if( audioBuffer != 0 )
+    {
+        delete audioBuffer;
+        audioBuffer = 0;
+    }
+    if( fileLoader != 0 )
+    {
+        delete fileLoader;
+        fileLoader = 0;
+    }
+    emit currentTimeChanged(0);
+    emit playerReady(false);
 }
 
-bool Player::start(double from_sec)
+bool Player::start(qint32 from)
 {
-    close();
-    if( audioBuffer == 0 )
-        return false;
-    restartOffset = audioBuffer->getRestartOffset();
-//    output = ProgramSettings::CreateOutputDevice(*b);
     if( output == 0 )
         return false;
-    if( notifyInterval > 0 )
-        output->setNotifyInterval(notifyInterval);
-    connect(output,SIGNAL(stateChanged(QAudio::State)),this,SIGNAL(stateChanged(QAudio::State)));
-    connect(output,SIGNAL(stateChanged(QAudio::State)),this,SLOT(stateChangedSlot(QAudio::State)));
-    connect(output,SIGNAL(notify()),this,SLOT(notifySlot()));
-    device = new QBuffer();
-    device->setBuffer(audioBuffer);
-    if( ! device->open(QIODevice::ReadOnly) )
-    {
-        close();
-        return false;
-    }
-    if( from_sec > 0 )
-    {
-//        if( from_sec >= us2s(b->duration()) )
-//            from_sec = 0;
-//        device->seek(b->bytesForDuration(s2us(from_sec)));
-    }
+    if( from != 0 )
+        seek(from);
     output->start(device);
-    return (output != 0);
+    return true;
 }
 
 void Player::notifySlot(void)
@@ -75,26 +81,26 @@ void Player::notifySlot(void)
     emit currentTimeChanged(currentTime());
 }
 
-bool Player::stop(void)
-{
-    bool rv = isPlay();
-    if( output != 0 )
-        output->stop();
-    return rv;
-}
-
-bool Player::isPlay(void)
+void Player::stop(void)
 {
     if( output == 0 )
-        return false;
-    return (output->state() == QAudio::ActiveState);
+        return;
+    if( output->state() == QAudio::ActiveState )
+        output->stop();
 }
 
-qint64 Player::currentTime(void)
+qint32 Player::currentTime(void)
 {
     if( (device == 0) || (output == 0) )
         return 0;
-    return output->format().durationForBytes(device->pos());
+    return output->format().durationForBytes(device->pos())/1000;
+}
+
+qint32 Player::getDuration(void)
+{
+    if( audioBuffer == 0 )
+        return -1;
+    return audioBuffer->duration()/1000;
 }
 
 void Player::setNotifyInterval(int ms)
@@ -107,6 +113,7 @@ void Player::setNotifyInterval(int ms)
 
 void Player::stateChangedSlot(QAudio::State state)
 {
+    qDebug() << state;
     switch (state)
     {
     case QAudio::ActiveState:
@@ -114,12 +121,9 @@ void Player::stateChangedSlot(QAudio::State state)
         break;
     case QAudio::IdleState:
     {
-        qint64 offset = restartOffset;
-        if( (offset < 0) && autoRestart )
-            offset = 0;
-        if( offset >= 0 )
+        if( autoRestart )
         {
-            device->seek(offset);
+            seek(0);
             output->start(device);
         }
         else
@@ -130,11 +134,55 @@ void Player::stateChangedSlot(QAudio::State state)
     {
         if (output->error() != QAudio::NoError)
             emit errorSignal();
-        close();
         emit stoped();
         break;
     }
     default:
         break;
     }
+}
+
+void Player::bufferReadySlot(AudioBuffer * a)
+{
+    close(); // clear all
+    if( a == 0 )
+        return;
+    output = new QAudioOutput(outputAudioDeviceInfo,*a);
+    if( output == 0 )
+    {
+        delete a;
+        return;
+    }
+    audioBuffer = a;
+    device = new QBuffer();
+    device->setBuffer(audioBuffer);
+    if( ! device->open(QIODevice::ReadOnly) )
+    {
+        delete a;
+        delete device;
+        return;
+    }
+
+    if( notifyInterval > 0 )
+        output->setNotifyInterval(notifyInterval);
+    connect(output,SIGNAL(stateChanged(QAudio::State)),this,SIGNAL(stateChanged(QAudio::State)));
+    connect(output,SIGNAL(stateChanged(QAudio::State)),this,SLOT(stateChangedSlot(QAudio::State)));
+    connect(output,SIGNAL(notify()),this,SLOT(notifySlot()));
+    seek(0);
+    emit playerReady(true);
+}
+
+bool Player::seek(qint32 to)
+{
+    if( (device == 0) || (audioBuffer == 0) )
+        return false;
+    return device->seek(audioBuffer->bytesForDuration(to*1000));
+}
+
+bool Player::setAudioDevice(const QAudioDeviceInfo & info)
+{
+    if( info.isNull() )
+        return false;
+    outputAudioDeviceInfo = info;
+    return true;
 }

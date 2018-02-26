@@ -6,113 +6,18 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>458</width>
-    <height>347</height>
+    <width>460</width>
+    <height>153</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Audio Player</string>
+   <string>Qt Audio Player</string>
+  </property>
+  <property name="windowIcon">
+   <iconset resource="res.qrc">
+    <normaloff>:/icons/audio-x-generic.png</normaloff>:/icons/audio-x-generic.png</iconset>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
-   <item>
-    <widget class="QGroupBox" name="groupBoxAudioOutput">
-     <property name="title">
-      <string>Audio output</string>
-     </property>
-     <layout class="QVBoxLayout" name="verticalLayout_2">
-      <item>
-       <layout class="QHBoxLayout" name="horizontalLayout_2">
-        <item>
-         <widget class="QLabel" name="label">
-          <property name="text">
-           <string>Device name</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QComboBox" name="comboBoxOutputDevice"/>
-        </item>
-       </layout>
-      </item>
-      <item>
-       <widget class="QCheckBox" name="checkBoxPreferredFormat">
-        <property name="text">
-         <string>Use preferred format</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QGroupBox" name="groupBoxFormat">
-        <property name="title">
-         <string>Format</string>
-        </property>
-        <layout class="QGridLayout" name="gridLayout">
-         <item row="0" column="0">
-          <widget class="QLabel" name="label_7">
-           <property name="text">
-            <string>Byte order</string>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="1">
-          <widget class="QComboBox" name="comboBoxByteOrder"/>
-         </item>
-         <item row="0" column="2">
-          <widget class="QLabel" name="label_4">
-           <property name="text">
-            <string>Codecs</string>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="3">
-          <widget class="QComboBox" name="comboBoxCodecs"/>
-         </item>
-         <item row="1" column="0">
-          <widget class="QLabel" name="label_2">
-           <property name="text">
-            <string>Sample rate</string>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="1">
-          <widget class="QComboBox" name="comboBoxSampleRates"/>
-         </item>
-         <item row="1" column="2">
-          <widget class="QLabel" name="label_5">
-           <property name="text">
-            <string>Sample size</string>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="3">
-          <widget class="QComboBox" name="comboBoxSampleSizes"/>
-         </item>
-         <item row="2" column="0">
-          <widget class="QLabel" name="label_6">
-           <property name="text">
-            <string>Sample type</string>
-           </property>
-          </widget>
-         </item>
-         <item row="2" column="1">
-          <widget class="QComboBox" name="comboBoxSampleType"/>
-         </item>
-         <item row="2" column="2">
-          <widget class="QLabel" name="label_3">
-           <property name="text">
-            <string>Channel counts</string>
-           </property>
-          </widget>
-         </item>
-         <item row="2" column="3">
-          <widget class="QComboBox" name="comboBoxChannelCounts"/>
-         </item>
-        </layout>
-       </widget>
-      </item>
-     </layout>
-    </widget>
-   </item>
    <item>
     <widget class="QGroupBox" name="groupBoxControl">
      <property name="title">
@@ -179,6 +84,9 @@
            <iconset resource="res.qrc">
             <normaloff>:/icons/media-playback-start-7.png</normaloff>:/icons/media-playback-start-7.png</iconset>
           </property>
+          <property name="checkable">
+           <bool>true</bool>
+          </property>
          </widget>
         </item>
         <item>
@@ -200,6 +108,9 @@
           <property name="icon">
            <iconset resource="res.qrc">
             <normaloff>:/icons/view-refresh-4.png</normaloff>:/icons/view-refresh-4.png</iconset>
+          </property>
+          <property name="checkable">
+           <bool>true</bool>
           </property>
          </widget>
         </item>
@@ -230,14 +141,31 @@
        </layout>
       </item>
       <item>
-       <widget class="QSlider" name="horizontalSliderProgress">
-        <property name="orientation">
-         <enum>Qt::Horizontal</enum>
-        </property>
-       </widget>
+       <layout class="QHBoxLayout" name="horizontalLayout_3">
+        <item>
+         <widget class="QSlider" name="horizontalSliderProgress">
+          <property name="orientation">
+           <enum>Qt::Horizontal</enum>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="labelPosition">
+          <property name="minimumSize">
+           <size>
+            <width>60</width>
+            <height>0</height>
+           </size>
+          </property>
+         </widget>
+        </item>
+       </layout>
       </item>
      </layout>
     </widget>
+   </item>
+   <item>
+    <widget class="QComboBox" name="comboBoxOutputDevice"/>
    </item>
   </layout>
  </widget>

@@ -22,23 +22,34 @@ public:
     ~QAudioDialog();
 
 private slots:
-    void on_comboBoxOutputDevice_currentIndexChanged(int index);
-
-    void on_checkBoxPreferredFormat_clicked(bool checked);
-
     void on_pushButtonOpen_clicked();
-
-    void bufferReadySlot(AudioBuffer * a);
 
     void on_pushButtonCloseFile_clicked();
 
+    void on_pushButtonPlay_clicked(bool checked);
+
+    void playerStarted(void);
+    void playerStoped(void);
+    void playerReadySlot(bool);
+    void playerPositionChanged(qint32);
+
+    void on_pushButtonLoop_clicked(bool checked);
+
+    void on_horizontalSliderProgress_valueChanged(int value);
+
+    void on_horizontalSliderProgress_sliderReleased();
+
+    void on_pushButtonGoBegin_clicked();
+
+    void on_pushButtonGoEnd_clicked();
+
+    void on_comboBoxOutputDevice_currentIndexChanged(int index);
+
 protected:
-    const QAudioDeviceInfo & getSelectedDevice(void);
+    QAudioDeviceInfo getSelectedDevice(void);
     bool  selectComboBoxItem(QComboBox * b, const QString & txt);
     QString audioFileSuffixLoad;
     QString workingDir;
-    AudioFileLoader *fileLoader;
-    AudioBuffer *audioBuffer;
     Player *player;
 private:
     Ui::QAudioDialog *ui;
