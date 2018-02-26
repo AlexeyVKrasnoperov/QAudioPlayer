@@ -147,27 +147,29 @@ void Player::bufferReadySlot(AudioBuffer * a)
     close(); // clear all
     if( a == 0 )
         return;
+    qDebug() << outputAudioDeviceInfo.deviceName();
     output = new QAudioOutput(outputAudioDeviceInfo,*a);
     if( output == 0 )
     {
         delete a;
         return;
     }
-    audioBuffer = a;
-    device = new QBuffer();
-    device->setBuffer(audioBuffer);
+    device = new QBuffer(a,this);
     if( ! device->open(QIODevice::ReadOnly) )
     {
         delete a;
         delete device;
+        device = 0;
+        delete output;
+        output = 0;
         return;
     }
-
     if( notifyInterval > 0 )
         output->setNotifyInterval(notifyInterval);
     connect(output,SIGNAL(stateChanged(QAudio::State)),this,SIGNAL(stateChanged(QAudio::State)));
     connect(output,SIGNAL(stateChanged(QAudio::State)),this,SLOT(stateChangedSlot(QAudio::State)));
     connect(output,SIGNAL(notify()),this,SLOT(notifySlot()));
+    audioBuffer = a;
     seek(0);
     emit playerReady(true);
 }
