@@ -12,6 +12,7 @@ class QComboBox;
 class AudioFileLoader;
 class AudioBuffer;
 class Player;
+class QSliderButton;
 
 class QAudioDialog : public QDialog
 {
@@ -45,12 +46,18 @@ private slots:
 
     void on_comboBoxOutputDevice_currentIndexChanged(int index);
 
+    void on_horizontalSliderProgress_sliderPressed();
+
 protected:
+    QSliderButton *audioVolume;
     QAudioDeviceInfo getSelectedDevice(void);
     bool  selectComboBoxItem(QComboBox * b, const QString & txt);
     QString audioFileSuffixLoad;
     QString workingDir;
     Player *player;
+    void readSettings();
+    void writeSettings();
+    virtual void closeEvent(QCloseEvent *e);
 private:
     Ui::QAudioDialog *ui;
 };

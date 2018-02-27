@@ -21,6 +21,7 @@ protected:
     QBuffer *device;
     bool autoRestart;
     int notifyInterval;
+    qreal volume;
 public:
     Player(void);
     virtual ~Player();
@@ -37,6 +38,8 @@ public:
     {
         autoRestart = f;
     }
+public slots:
+    void setVolume(int v);
 protected slots:
     void stateChangedSlot(QAudio::State state);
     void notifySlot(void);

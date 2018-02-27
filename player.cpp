@@ -4,7 +4,6 @@
 #include <QIODevice>
 #include "audiobuffer.h"
 #include "audiofilereader.h"
-#include <QDebug>
 
 Player::Player(void)
 {
@@ -12,6 +11,7 @@ Player::Player(void)
     device = 0;
     audioBuffer = 0;
     fileLoader  = 0;
+    volume = 1;
     notifyInterval = -1;
     autoRestart = false;
     outputAudioDeviceInfo = QAudioDeviceInfo::defaultOutputDevice();
@@ -20,6 +20,13 @@ Player::Player(void)
 Player::~Player(void)
 {
     close();
+}
+
+void Player::setVolume(int v)
+{
+    volume = 0.01*v;
+    if( output != 0 )
+        output->setVolume(volume);
 }
 
 bool Player::open(const QString & name)
@@ -113,7 +120,6 @@ void Player::setNotifyInterval(int ms)
 
 void Player::stateChangedSlot(QAudio::State state)
 {
-    qDebug() << state;
     switch (state)
     {
     case QAudio::ActiveState:
@@ -147,7 +153,6 @@ void Player::bufferReadySlot(AudioBuffer * a)
     close(); // clear all
     if( a == 0 )
         return;
-    qDebug() << outputAudioDeviceInfo.deviceName();
     output = new QAudioOutput(outputAudioDeviceInfo,*a);
     if( output == 0 )
     {
@@ -169,6 +174,7 @@ void Player::bufferReadySlot(AudioBuffer * a)
     connect(output,SIGNAL(stateChanged(QAudio::State)),this,SIGNAL(stateChanged(QAudio::State)));
     connect(output,SIGNAL(stateChanged(QAudio::State)),this,SLOT(stateChangedSlot(QAudio::State)));
     connect(output,SIGNAL(notify()),this,SLOT(notifySlot()));
+    output->setVolume(volume);
     audioBuffer = a;
     seek(0);
     emit playerReady(true);

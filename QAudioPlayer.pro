@@ -30,7 +30,10 @@ SOURCES += \
     audiofile.cpp \
     audiofilereader.cpp \
     player.cpp \
-    outputaudioformatform.cpp
+    outputaudioformatform.cpp \
+    qsliderbutton.cpp \
+    qactionslider.cpp \
+    formslidercontrol.cpp
 
 HEADERS += \
         qaudiodialog.h \
@@ -39,11 +42,15 @@ HEADERS += \
     audiofilereader.h \
     fileformat.h \
     player.h \
-    outputaudioformatform.h
+    outputaudioformatform.h \
+    qsliderbutton.h \
+    qactionslider.h \
+    formslidercontrol.h
 
 FORMS += \
         qaudiodialog.ui \
-    outputaudioformatform.ui
+    outputaudioformatform.ui \
+    formslidercontrol.ui
 
 RESOURCES += \
     res.qrc
