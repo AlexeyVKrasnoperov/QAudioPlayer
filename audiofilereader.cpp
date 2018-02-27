@@ -1,7 +1,10 @@
 #include "audiofilereader.h"
+#include <QDebug>
 
 bool AudioFileReader::Read(const QString & fName)
 {
+    if( buffer->isValid() || ! buffer->isEmpty() )
+        return false;
     fileName = fName;
     if( ! Decode() )
     {
@@ -30,6 +33,7 @@ bool AudioFileReader::Decode(void)
     codecContext->codec = cdc;
     if( avcodec_open2(codecContext, codecContext->codec, NULL) != 0)
         return false;
+    qDebug() << codecContext->channel_layout;
     if( codecContext->channel_layout == 0 )
     {
         if( codecContext->channels == 1 )
@@ -37,6 +41,15 @@ bool AudioFileReader::Decode(void)
         else
             codecContext->channel_layout = AV_CH_LAYOUT_STEREO;
     }
+    //
+    //  Init QAudioFormat format
+    //
+    buffer->setCodec("audio/pcm");
+    buffer->setByteOrder(QAudioFormat::LittleEndian);
+    buffer->setSampleRate(codecContext->sample_rate);
+    buffer->setSampleSize(getSampleSize(codecContext->sample_fmt));
+    buffer->setSampleType(getSampleType(codecContext->sample_fmt));
+    buffer->setChannelCount((codecContext->channel_layout == AV_CH_LAYOUT_MONO) ? 1 : 2);
     //
     AVPacket readingPacket;
     av_init_packet(&readingPacket);
@@ -77,7 +90,7 @@ bool AudioFileReader::DecodePacket(AVPacket & packet)
             decodingPacket.size -= result;
             decodingPacket.data += result;
             //
-            const AVFrame *f = ConvertFrame(iframe);
+            const AVFrame *f = ConvertFromPlanar(iframe);
             if( f != 0 )
                 buffer->append((const char *)f->data[0],f->linesize[0]);
             else
@@ -92,30 +105,25 @@ bool AudioFileReader::DecodePacket(AVPacket & packet)
     return true;
 }
 
-const AVFrame * AudioFileReader::ConvertFrame(const AVFrame* frame)
+const AVFrame * AudioFileReader::ConvertFromPlanar(const AVFrame* frame)
 {
-    if( (getAVSampleFormat(buffer) == codecContext->sample_fmt) &&
-            (buffer->channelCount() == codecContext->channels) &&
-            (buffer->sampleRate() == codecContext->sample_rate ) )
+    if( getAVSampleFormat(buffer) == codecContext->sample_fmt )
         return frame;
-    int nb_samples = av_rescale_rnd(frame->nb_samples,buffer->sampleRate(),codecContext->sample_rate,AV_ROUND_UP);
     if( oframe != 0 )
     {
-        if( oframe->nb_samples < nb_samples )
+        if( oframe->nb_samples < frame->nb_samples )
             av_frame_free(&oframe);
     }
     if( oframe == 0 )
     {
-        oframe = alloc_audio_frame(getAVSampleFormat(buffer),getAVChannelLayout(buffer),
-                                   buffer->sampleRate(),nb_samples);
+        oframe = alloc_audio_frame(getAVSampleFormat(buffer),getAVChannelLayout(buffer),buffer->sampleRate(),frame->nb_samples);
         if( oframe == 0 )
             return 0;
     }
     memset(oframe->data[0],0,oframe->linesize[0]);
     if( swr_ctx == 0 )
     {
-        swr_ctx = swr_alloc_set_opts(NULL,
-                                     getAVChannelLayout(buffer), getAVSampleFormat(buffer),buffer->sampleRate(),
+        swr_ctx = swr_alloc_set_opts(NULL,getAVChannelLayout(buffer), getAVSampleFormat(buffer),buffer->sampleRate(),
                                      codecContext->channel_layout,codecContext->sample_fmt,codecContext->sample_rate,
                                      0, NULL);
         if( ! swr_ctx )
@@ -126,5 +134,41 @@ const AVFrame * AudioFileReader::ConvertFrame(const AVFrame* frame)
             return 0;
         }
     }
-    return ( swr_convert(swr_ctx,oframe->data,nb_samples,(const uint8_t **)iframe->data,iframe->nb_samples) >= 0 ) ? oframe : 0;
+    return ( swr_convert(swr_ctx,oframe->data,oframe->nb_samples,(const uint8_t **)iframe->data,iframe->nb_samples) >= 0 ) ? oframe : 0;
 }
+
+//const AVFrame * AudioFileReader::ConvertFrame(const AVFrame* frame)
+//{
+//    if( getAVSampleFormat(buffer) == codecContext->sample_fmt )
+//        return frame;
+//    int nb_samples = av_rescale_rnd(frame->nb_samples,buffer->sampleRate(),codecContext->sample_rate,AV_ROUND_UP);
+//    if( oframe != 0 )
+//    {
+//        if( oframe->nb_samples < nb_samples )
+//            av_frame_free(&oframe);
+//    }
+//    if( oframe == 0 )
+//    {
+//        oframe = alloc_audio_frame(getAVSampleFormat(buffer),getAVChannelLayout(buffer),
+//                                   buffer->sampleRate(),nb_samples);
+//        if( oframe == 0 )
+//            return 0;
+//    }
+//    memset(oframe->data[0],0,oframe->linesize[0]);
+//    if( swr_ctx == 0 )
+//    {
+//        swr_ctx = swr_alloc_set_opts(NULL,
+//                                     getAVChannelLayout(buffer), getAVSampleFormat(buffer),buffer->sampleRate(),
+//                                     codecContext->channel_layout,codecContext->sample_fmt,codecContext->sample_rate,
+//                                     0, NULL);
+//        if( ! swr_ctx )
+//            return 0;
+//        if( swr_init(swr_ctx) < 0)
+//        {
+//            swr_free(&swr_ctx);
+//            return 0;
+//        }
+//    }
+//    return ( swr_convert(swr_ctx,oframe->data,nb_samples,(const uint8_t **)iframe->data,iframe->nb_samples) >= 0 ) ? oframe : 0;
+//}
+

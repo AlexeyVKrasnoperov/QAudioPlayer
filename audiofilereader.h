@@ -9,14 +9,14 @@ class AudioFileReader: public AudioFile
 protected:
     bool Decode(void);
     bool DecodePacket(AVPacket & packet);
-    const AVFrame* ConvertFrame(const AVFrame* frame);
+    const AVFrame* ConvertFromPlanar(const AVFrame* frame);
 public:
     AudioFileReader(AudioBuffer *b):AudioFile(b){}
     virtual ~AudioFileReader(){}
     bool Read(const QString & fName);
     static AudioBuffer *CreateBuffer(const QString & fName)
     {
-        if( ! QFileInfo(fName).exists() )
+        if( ! QFileInfo::exists(fName) )
             return 0;
         AudioBuffer *b = new AudioBuffer();
         AudioFileReader f(b);
@@ -48,7 +48,7 @@ public:
     {
         if( isRunning() )
             wait();
-        if( ! QFileInfo(fName).exists() )
+        if( ! QFileInfo::exists(fName) )
             return false;
         fileName = fName;
         start();

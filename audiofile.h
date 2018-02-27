@@ -74,6 +74,21 @@ protected:
         return QAudioFormat::SignedInt;
     }
     //
+    int getSampleSize(AVSampleFormat format)
+    {
+        if( (format == AV_SAMPLE_FMT_U8) || (format == AV_SAMPLE_FMT_U8P) )
+            return 8;
+        else if( (format == AV_SAMPLE_FMT_S16 ) || (format == AV_SAMPLE_FMT_S16P ) )
+            return 16;
+        else if( (format == AV_SAMPLE_FMT_S32 ) || (format == AV_SAMPLE_FMT_S32P ) )
+            return 32;
+        else if( (format == AV_SAMPLE_FMT_FLT) || (format == AV_SAMPLE_FMT_FLTP) )
+            return sizeof(float);
+        else if( (format == AV_SAMPLE_FMT_DBL) || (format == AV_SAMPLE_FMT_DBLP) )
+            return sizeof(double);
+        return 0;
+    }
+    //
     virtual void release(void);
     //
 public:
