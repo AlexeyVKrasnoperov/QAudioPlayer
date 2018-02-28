@@ -35,7 +35,7 @@ protected:
     AVFormatContext *formatContext;
     SwrContext * swr_ctx;
     //
-    AVFrame *alloc_audio_frame(enum AVSampleFormat sample_fmt, uint64_t channel_layout, int sample_rate, int nb_samples);
+    AVFrame *alloc_audio_frame(AVSampleFormat sample_fmt, uint64_t channel_layout, int sample_rate, int nb_samples);
     //   
     AVSampleFormat getAVSampleFormat(AudioBuffer *b)
     {
@@ -83,9 +83,9 @@ protected:
         else if( (format == AV_SAMPLE_FMT_S32 ) || (format == AV_SAMPLE_FMT_S32P ) )
             return 32;
         else if( (format == AV_SAMPLE_FMT_FLT) || (format == AV_SAMPLE_FMT_FLTP) )
-            return sizeof(float);
+            return 32;
         else if( (format == AV_SAMPLE_FMT_DBL) || (format == AV_SAMPLE_FMT_DBLP) )
-            return sizeof(double);
+            return 32;
         return 0;
     }
     //

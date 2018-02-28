@@ -57,9 +57,10 @@ RESOURCES += \
 
 
 win32: {
-    FFMPEG_DIR=$$PWD/ffmpeg-3.2.2-lgpl
+    //FFMPEG_DIR=$$PWD/ffmpeg-3.2.2-lgpl
+FFMPEG_DIR=$$PWD/ffmpeg-3.4.2
     INCLUDEPATH += $$FFMPEG_DIR/include
-    LIBS += -L$$FFMPEG_DIR/bin/w64
+    LIBS += -L$$FFMPEG_DIR/lib/
 }
 
 LIBS += -lavformat \

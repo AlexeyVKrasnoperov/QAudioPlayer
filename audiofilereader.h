@@ -9,7 +9,7 @@ class AudioFileReader: public AudioFile
 protected:
     bool Decode(void);
     bool DecodePacket(AVPacket & packet);
-    const AVFrame* ConvertFromPlanar(const AVFrame* frame);
+    const AVFrame* ConvertFrame(const AVFrame* frame);
 public:
     AudioFileReader(AudioBuffer *b):AudioFile(b){}
     virtual ~AudioFileReader(){}

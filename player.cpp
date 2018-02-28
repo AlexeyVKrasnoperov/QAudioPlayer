@@ -2,6 +2,7 @@
 #include <QBuffer>
 #include <QAudioOutput>
 #include <QIODevice>
+#include <QDebug>
 #include "audiobuffer.h"
 #include "audiofilereader.h"
 
@@ -153,6 +154,7 @@ void Player::bufferReadySlot(AudioBuffer * a)
     close(); // clear all
     if( a == 0 )
         return;
+    qDebug() << a->sampleRate() << a->sampleSize() << a->sampleType() << a->channelCount();
     output = new QAudioOutput(outputAudioDeviceInfo,*a);
     if( output == 0 )
     {

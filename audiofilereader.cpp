@@ -90,7 +90,7 @@ bool AudioFileReader::DecodePacket(AVPacket & packet)
             decodingPacket.size -= result;
             decodingPacket.data += result;
             //
-            const AVFrame *f = ConvertFromPlanar(iframe);
+            const AVFrame *f = ConvertFrame(iframe);
             if( f != 0 )
                 buffer->append((const char *)f->data[0],f->linesize[0]);
             else
@@ -105,25 +105,30 @@ bool AudioFileReader::DecodePacket(AVPacket & packet)
     return true;
 }
 
-const AVFrame * AudioFileReader::ConvertFromPlanar(const AVFrame* frame)
+const AVFrame * AudioFileReader::ConvertFrame(const AVFrame* frame)
 {
-    if( getAVSampleFormat(buffer) == codecContext->sample_fmt )
+    if( (getAVSampleFormat(buffer) == codecContext->sample_fmt) &&
+            (buffer->channelCount() == codecContext->channels) &&
+            (buffer->sampleRate() == codecContext->sample_rate ) )
         return frame;
+    int nb_samples = av_rescale_rnd(frame->nb_samples,buffer->sampleRate(),codecContext->sample_rate,AV_ROUND_UP);
     if( oframe != 0 )
     {
-        if( oframe->nb_samples < frame->nb_samples )
+        if( oframe->nb_samples < nb_samples )
             av_frame_free(&oframe);
     }
     if( oframe == 0 )
     {
-        oframe = alloc_audio_frame(getAVSampleFormat(buffer),getAVChannelLayout(buffer),buffer->sampleRate(),frame->nb_samples);
+        oframe = alloc_audio_frame(getAVSampleFormat(buffer),getAVChannelLayout(buffer),
+                                   buffer->sampleRate(),nb_samples);
         if( oframe == 0 )
             return 0;
     }
     memset(oframe->data[0],0,oframe->linesize[0]);
     if( swr_ctx == 0 )
     {
-        swr_ctx = swr_alloc_set_opts(NULL,getAVChannelLayout(buffer), getAVSampleFormat(buffer),buffer->sampleRate(),
+        swr_ctx = swr_alloc_set_opts(NULL,
+                                     getAVChannelLayout(buffer), getAVSampleFormat(buffer),buffer->sampleRate(),
                                      codecContext->channel_layout,codecContext->sample_fmt,codecContext->sample_rate,
                                      0, NULL);
         if( ! swr_ctx )
@@ -134,41 +139,15 @@ const AVFrame * AudioFileReader::ConvertFromPlanar(const AVFrame* frame)
             return 0;
         }
     }
-    return ( swr_convert(swr_ctx,oframe->data,oframe->nb_samples,(const uint8_t **)iframe->data,iframe->nb_samples) >= 0 ) ? oframe : 0;
+    //
+    int got_samples = swr_convert(swr_ctx,oframe->data,nb_samples,(const uint8_t **)iframe->data,iframe->nb_samples);
+    if( got_samples < 0 )
+        return 0;
+    //
+    while( got_samples > 0 )
+    {
+        got_samples = swr_convert(swr_ctx,oframe->data,nb_samples,0,0);
+    }
+    return oframe;
 }
-
-//const AVFrame * AudioFileReader::ConvertFrame(const AVFrame* frame)
-//{
-//    if( getAVSampleFormat(buffer) == codecContext->sample_fmt )
-//        return frame;
-//    int nb_samples = av_rescale_rnd(frame->nb_samples,buffer->sampleRate(),codecContext->sample_rate,AV_ROUND_UP);
-//    if( oframe != 0 )
-//    {
-//        if( oframe->nb_samples < nb_samples )
-//            av_frame_free(&oframe);
-//    }
-//    if( oframe == 0 )
-//    {
-//        oframe = alloc_audio_frame(getAVSampleFormat(buffer),getAVChannelLayout(buffer),
-//                                   buffer->sampleRate(),nb_samples);
-//        if( oframe == 0 )
-//            return 0;
-//    }
-//    memset(oframe->data[0],0,oframe->linesize[0]);
-//    if( swr_ctx == 0 )
-//    {
-//        swr_ctx = swr_alloc_set_opts(NULL,
-//                                     getAVChannelLayout(buffer), getAVSampleFormat(buffer),buffer->sampleRate(),
-//                                     codecContext->channel_layout,codecContext->sample_fmt,codecContext->sample_rate,
-//                                     0, NULL);
-//        if( ! swr_ctx )
-//            return 0;
-//        if( swr_init(swr_ctx) < 0)
-//        {
-//            swr_free(&swr_ctx);
-//            return 0;
-//        }
-//    }
-//    return ( swr_convert(swr_ctx,oframe->data,nb_samples,(const uint8_t **)iframe->data,iframe->nb_samples) >= 0 ) ? oframe : 0;
-//}
 

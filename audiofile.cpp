@@ -10,13 +10,14 @@ bool AudioFile::ffmpegInit = false;
 FileFormatVector AudioFile::audioFormats;
 QStringList AudioFile::audioFileFilters;
 
-AVFrame * AudioFile::alloc_audio_frame(enum AVSampleFormat sample_fmt, uint64_t channel_layout, int sample_rate, int nb_samples)
+AVFrame * AudioFile::alloc_audio_frame(AVSampleFormat sample_fmt, uint64_t channel_layout, int sample_rate, int nb_samples)
 {
     AVFrame *f = av_frame_alloc();
     if( f )
     {
         f->format = sample_fmt;
         f->channel_layout = channel_layout;
+        f->channels = av_get_channel_layout_nb_channels(channel_layout);
         f->sample_rate = sample_rate;
         f->nb_samples = nb_samples;
         if (nb_samples)
