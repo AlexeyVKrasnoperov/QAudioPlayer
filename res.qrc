@@ -1,31 +1,8 @@
 <RCC>
     <qresource prefix="/">
         <file>icons/application-exit-5.png</file>
-        <file>icons/audio-card.png</file>
-        <file>icons/audio-input-line.png</file>
-        <file>icons/audio-input-microphone-3.png</file>
         <file>icons/audio-volume-medium.png</file>
         <file>icons/audio-x-generic.png</file>
-        <file>icons/configure-2.png</file>
-        <file>icons/dialog-ok-5.png</file>
-        <file>icons/document-close-4.png</file>
-        <file>icons/document-new-5.png</file>
-        <file>icons/document-new-8.png</file>
-        <file>icons/document-open-2.png</file>
-        <file>icons/document-save-7.png</file>
-        <file>icons/draw-rectangle-2.png</file>
-        <file>icons/edit-add-4.png</file>
-        <file>icons/edit-clear-2.png</file>
-        <file>icons/edit-cut.png</file>
-        <file>icons/edit-delete-6.png</file>
-        <file>icons/edit-remove-3.png</file>
-        <file>icons/edit-rename.png</file>
-        <file>icons/face-surprise-2.png</file>
-        <file>icons/folder-new-2.png</file>
-        <file>icons/folder-sound.png</file>
-        <file>icons/go-top-3.png</file>
-        <file>icons/kmplot.png</file>
-        <file>icons/ktimer-4.png</file>
         <file>icons/media-playback-pause-7.png</file>
         <file>icons/media-playback-start-7.png</file>
         <file>icons/media-playback-stop-7.png</file>
@@ -35,20 +12,8 @@
         <file>icons/media-seek-forward-7.png</file>
         <file>icons/media-skip-backward-7.png</file>
         <file>icons/media-skip-forward-7.png</file>
-        <file>icons/preferences-desktop-theme-4.png</file>
-        <file>icons/printer-9.png</file>
-        <file>icons/process-stop-5.png</file>
-        <file>icons/select-rectangular.png</file>
-        <file>icons/system-settings.png</file>
-        <file>icons/view-refresh.png</file>
-        <file>icons/view-refresh-2.png</file>
-        <file>icons/view-refresh-3.png</file>
+        <file>icons/document-open-2.png</file>
+        <file>icons/edit-delete-6.png</file>
         <file>icons/view-refresh-4.png</file>
-        <file>icons/view-refresh-5.png</file>
-        <file>icons/view-refresh-6.png</file>
-        <file>icons/view-refresh-7.png</file>
-        <file>icons/view-refresh-8.png</file>
-        <file>icons/view-refresh-9.png</file>
-        <file>icons/window-duplicate.png</file>
     </qresource>
 </RCC>

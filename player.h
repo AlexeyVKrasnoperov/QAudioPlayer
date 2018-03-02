@@ -4,6 +4,7 @@
 #include <QObject>
 #include <QAudio>
 #include <QAudioDeviceInfo>
+#include <QScopedPointer>
 
 class QAudioOutput;
 class QBuffer;
@@ -15,10 +16,11 @@ class Player: public QObject
     Q_OBJECT
 protected:
     QAudioDeviceInfo outputAudioDeviceInfo;
-    AudioFileLoader *fileLoader;
-    AudioBuffer  *audioBuffer;
-    QAudioOutput *output;
-    QBuffer *device;
+    QScopedPointer<AudioBuffer>    originalAudioBuffer;
+    QScopedPointer<AudioBuffer> transformedAudioBuffer;
+    QScopedPointer<AudioFileLoader> fileLoader;
+    QScopedPointer<QAudioOutput> audioOutputDevice;
+    QScopedPointer<QBuffer> audioBufferDevice;
     bool autoRestart;
     int notifyInterval;
     qreal volume;
@@ -38,8 +40,11 @@ public:
     {
         autoRestart = f;
     }
+    //
+    QString getFileName(void);
+    //
 public slots:
-    void setVolume(int v);
+    void setVolume(int v = -1);
 protected slots:
     void stateChangedSlot(QAudio::State state);
     void notifySlot(void);

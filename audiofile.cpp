@@ -46,6 +46,7 @@ void AudioFile::initAudioFileFilters(void)
         audioFormats.push_back(FileFormat("tta","True Audio"));
         audioFormats.push_back(FileFormat("wv","WavPack"));
         audioFormats.push_back(FileFormat("aac","Advanced Audio Coding"));
+//        audioFormats.push_back(FileFormat("m4a","Advanced Audio Coding"));
         audioFormats.push_back(FileFormat("ogg","Ogg Vorbis"));
     }
     QString allFormats;

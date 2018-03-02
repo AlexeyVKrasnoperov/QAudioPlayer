@@ -13,7 +13,7 @@ bool AudioFileReader::Read(const QString & fName)
     }
     if( buffer->isEmpty() )
         return false;
-    buffer->setFileName(fileName);
+    buffer->setObjectName(fName);
     return true;
 }
 
@@ -31,9 +31,8 @@ bool AudioFileReader::Decode(void)
     AVStream *audioStream = formatContext->streams[streamIndex];
     codecContext = audioStream->codec;
     codecContext->codec = cdc;
-    if( avcodec_open2(codecContext, codecContext->codec, NULL) != 0)
+    if( avcodec_open2(codecContext, cdc, NULL) != 0)
         return false;
-    qDebug() << codecContext->channel_layout;
     if( codecContext->channel_layout == 0 )
     {
         if( codecContext->channels == 1 )
@@ -47,7 +46,7 @@ bool AudioFileReader::Decode(void)
     buffer->setCodec("audio/pcm");
     buffer->setByteOrder(QAudioFormat::LittleEndian);
     buffer->setSampleRate(codecContext->sample_rate);
-    buffer->setSampleSize(getSampleSize(codecContext->sample_fmt));
+    buffer->setSampleSize(8*av_get_bytes_per_sample(codecContext->sample_fmt));
     buffer->setSampleType(getSampleType(codecContext->sample_fmt));
     buffer->setChannelCount((codecContext->channel_layout == AV_CH_LAYOUT_MONO) ? 1 : 2);
     //
@@ -61,7 +60,7 @@ bool AudioFileReader::Decode(void)
         av_free_packet(&readingPacket);
     }
     //
-    if (codecContext->codec->capabilities & CODEC_CAP_DELAY)
+    if (cdc->capabilities & CODEC_CAP_DELAY)
     {
         av_init_packet(&readingPacket);
         rv = DecodePacket(readingPacket);
@@ -89,10 +88,16 @@ bool AudioFileReader::DecodePacket(AVPacket & packet)
         {
             decodingPacket.size -= result;
             decodingPacket.data += result;
+            decodingPacket.dts = AV_NOPTS_VALUE;
+            decodingPacket.pts = AV_NOPTS_VALUE;
             //
             const AVFrame *f = ConvertFrame(iframe);
             if( f != 0 )
-                buffer->append((const char *)f->data[0],f->linesize[0]);
+            {
+                int data_size = av_samples_get_buffer_size(NULL, codecContext->channels,
+                                                           f->nb_samples,codecContext->sample_fmt,1);
+                buffer->append((const char *)f->data[0],data_size);
+            }
             else
                 return false;
         }
@@ -119,8 +124,7 @@ const AVFrame * AudioFileReader::ConvertFrame(const AVFrame* frame)
     }
     if( oframe == 0 )
     {
-        oframe = alloc_audio_frame(getAVSampleFormat(buffer),getAVChannelLayout(buffer),
-                                   buffer->sampleRate(),nb_samples);
+        oframe = alloc_audio_frame(getAVSampleFormat(buffer),getAVChannelLayout(buffer),buffer->sampleRate(),nb_samples);
         if( oframe == 0 )
             return 0;
     }
@@ -145,9 +149,7 @@ const AVFrame * AudioFileReader::ConvertFrame(const AVFrame* frame)
         return 0;
     //
     while( got_samples > 0 )
-    {
         got_samples = swr_convert(swr_ctx,oframe->data,nb_samples,0,0);
-    }
     return oframe;
 }
 

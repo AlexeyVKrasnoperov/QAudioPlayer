@@ -4,6 +4,7 @@
 #include <QIcon>
 #include <QSettings>
 #include <QFileDialog>
+#include <QDebug>
 #include "audiofile.h"
 #include "audiofilereader.h"
 #include "player.h"
@@ -43,21 +44,22 @@ QAudioDialog::QAudioDialog(QWidget *parent) :
     ui->pushButtonCloseFile->setEnabled(false);
     ui->pushButtonGoBegin->setEnabled(false);
     //
-    adjustSize();
-    setFixedSize(size());
-    //
-    readSettings();
-    //
     player = new Player();
     player->setNotifyInterval(10);
     player->setAudioDevice(getSelectedDevice());
-    player->setAutoRestart(ui->pushButtonLoop->isChecked());
     //
     connect(player,SIGNAL(playerReady(bool)),this,SLOT(playerReadySlot(bool)));
     connect(player,SIGNAL(started()),this,SLOT(playerStarted()));
     connect(player,SIGNAL(stoped()),this,SLOT(playerStoped()));
     connect(player,SIGNAL(currentTimeChanged(qint32)),this,SLOT(playerPositionChanged(qint32)));
     connect(audioVolume,SIGNAL(valueChanged(int)),player,SLOT(setVolume(int)));
+    //
+    adjustSize();
+    setFixedSize(size());
+    readSettings();
+    //
+    player->setVolume(audioVolume->value());
+    player->setAutoRestart(ui->pushButtonLoop->isChecked());
     //
 }
 
@@ -100,14 +102,16 @@ void QAudioDialog::playerReadySlot(bool ready)
     ui->horizontalSliderProgress->setSliderPosition(0);
     ui->groupBoxControl->setTitle(tr("Control"));
     ui->labelPosition->setText(tr("%1 c").arg(0.,0,'f',3));
+    setWindowTitle(tr("QtAudioPlayer"));
     //
-    if( player != 0 )
+    if( (player != 0) && ready )
     {
         qint64 d = player->getDuration();
         if( d > 0 )
         {
             ui->horizontalSliderProgress->setMaximum(d);
             ui->groupBoxControl->setTitle(tr("Duration %1 c").arg(0.001*d,0,'f',3));
+            setWindowTitle(tr("QtAudioPlayer : \"%1\"").arg(QFileInfo(player->getFileName()).baseName()));
         }
         ui->labelPosition->setText(tr("%1 c").arg(0.001*player->currentTime(),0,'f',3));
     }
