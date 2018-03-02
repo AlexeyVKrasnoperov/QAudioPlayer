@@ -131,21 +131,27 @@ void Player::stateChangedSlot(QAudio::State state)
     }
 }
 
-void Player::bufferReadySlot(AudioBuffer * a)
+void Player::bufferReadySlot(AudioBuffer * original)
 {
     close(); // clear all
-    if( a == 0 )
+    if( original == 0 )
         return;
-    audioOutputDevice.reset( new QAudioOutput(outputAudioDeviceInfo,*a) ) ;
+    //
+    if( ! outputAudioDeviceInfo.isFormatSupported(*original) )
+    {
+        outputAudioDeviceInfo.nearestFormat(*original);
+    }
+    //
+    audioOutputDevice.reset( new QAudioOutput(outputAudioDeviceInfo,*original) ) ;
     if( audioOutputDevice.isNull() )
     {
-        delete a;
+        delete original;
         return;
     }
-    audioBufferDevice.reset(new QBuffer(a,this));
+    audioBufferDevice.reset(new QBuffer(original,this));
     if( ! audioBufferDevice->open(QIODevice::ReadOnly) )
     {
-        delete a;
+        delete original;
         audioBufferDevice.reset();
         audioOutputDevice.reset();
         return;
@@ -155,7 +161,7 @@ void Player::bufferReadySlot(AudioBuffer * a)
     connect(audioOutputDevice.data(),SIGNAL(stateChanged(QAudio::State)),this,SIGNAL(stateChanged(QAudio::State)));
     connect(audioOutputDevice.data(),SIGNAL(stateChanged(QAudio::State)),this,SLOT(stateChangedSlot(QAudio::State)));
     connect(audioOutputDevice.data(),SIGNAL(notify()),this,SLOT(notifySlot()));
-    originalAudioBuffer.reset(a);
+    originalAudioBuffer.reset(original);
     seek(0);
     emit playerReady(true);
 }

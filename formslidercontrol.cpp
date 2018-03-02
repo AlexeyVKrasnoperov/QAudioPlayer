@@ -3,7 +3,7 @@
 #include <QFontMetrics>
 
 FormSliderControl::FormSliderControl(const QString & title, const QString & unit, QWidget *parent, int id):
-    QWidget(parent), Id(id), ui(new Ui::FormSliderControl)
+    QWidget(parent), ui(new Ui::FormSliderControl),  Id(id)
 {
     ui->setupUi(this);
     sliderPressed = false;

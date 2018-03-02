@@ -48,7 +48,7 @@ public slots:
 protected slots:
     void stateChangedSlot(QAudio::State state);
     void notifySlot(void);
-    void bufferReadySlot(AudioBuffer *b);
+    void bufferReadySlot(AudioBuffer *original);
 signals:
     void stateChanged(QAudio::State);
     void currentTimeChanged(qint32 time);

@@ -8,7 +8,7 @@
 #include "audiofile.h"
 #include "audiofilereader.h"
 #include "player.h"
-#include "QSliderButton.h"
+#include "qsliderbutton.h"
 
 QAudioDialog::QAudioDialog(QWidget *parent) :
     QDialog(parent),
