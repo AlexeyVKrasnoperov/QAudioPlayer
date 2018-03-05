@@ -79,6 +79,10 @@ protected:
 public:
     AudioFile(AudioBuffer *b = 0);
     virtual ~AudioFile();
+    AudioBuffer * getBuffer(void)
+    {
+        return buffer;
+    }
 };
 
 #endif // AUDIOFILE_H

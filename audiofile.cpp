@@ -119,6 +119,9 @@ AudioFile::AudioFile(AudioBuffer *b):buffer(b)
     codecContext  = 0;
     formatContext = 0;
     swr_ctx = 0;
+    //
+    if( buffer == 0 )
+        buffer = new AudioBuffer();
 }
 
 AudioFile::~AudioFile()

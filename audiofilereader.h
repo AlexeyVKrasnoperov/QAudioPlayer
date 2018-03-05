@@ -11,17 +11,20 @@ protected:
     bool DecodePacket(AVPacket & packet);
     const AVFrame* ConvertFrame(const AVFrame* frame);
 public:
-    AudioFileReader(AudioBuffer *b):AudioFile(b){}
+    AudioFileReader(const QString & fname):AudioFile(0)
+    {
+        Read(fname);
+    }
     virtual ~AudioFileReader(){}
     bool Read(const QString & fName);
-    static AudioBuffer *CreateBuffer(const QString & fName)
+    static AudioBuffer *CreateBuffer(const QString & fname)
     {
-        if( ! QFileInfo::exists(fName) )
+        if( ! QFileInfo::exists(fname) )
             return 0;
-        AudioBuffer *b = new AudioBuffer();
-        AudioFileReader f(b);
-        if( ( ! f.Read(fName) ) || b->isEmpty() )
-        {
+        AudioFileReader f(fname);
+        AudioBuffer *b = f.getBuffer();
+        if( (b != 0) && b->isEmpty() )
+        {            
             delete b;
             b = 0;
         }
@@ -36,8 +39,7 @@ protected:
     QString fileName;
     virtual void run(void)
     {
-        AudioBuffer *buffer = AudioFileReader::CreateBuffer(fileName);
-        emit ready(buffer);
+        emit ready(AudioFileReader::CreateBuffer(fileName));
     }
 public:
     AudioFileLoader(void)

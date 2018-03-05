@@ -43,7 +43,6 @@ bool AudioFileReader::Decode(void)
     //
     //  Init QAudioFormat format
     //
-    buffer->setCodec("audio/pcm");
     buffer->setByteOrder(QAudioFormat::LittleEndian);
     buffer->setSampleRate(codecContext->sample_rate);
     buffer->setSampleSize(8*av_get_bytes_per_sample(codecContext->sample_fmt));

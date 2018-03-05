@@ -4,6 +4,7 @@ using namespace std;
 
 AudioBuffer::AudioBuffer(const QAudioFormat & format, QObject *parent):QObject(parent),QAudioFormat(format)
 {
+    setCodec("audio/pcm");
 }
 
 AudioBuffer::~AudioBuffer()

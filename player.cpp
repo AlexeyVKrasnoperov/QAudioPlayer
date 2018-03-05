@@ -54,7 +54,6 @@ void Player::close(void)
     }
     audioBufferDevice.reset();
     originalAudioBuffer.reset();
-    transformedAudioBuffer.reset();
     fileLoader.reset();
     emit currentTimeChanged(0);
     emit playerReady(false);
@@ -134,37 +133,33 @@ void Player::stateChangedSlot(QAudio::State state)
 void Player::bufferReadySlot(AudioBuffer * original)
 {
     close(); // clear all
-    if( original == 0 )
-        return;
-    //
-    if( ! outputAudioDeviceInfo.isFormatSupported(*original) )
-    {
-        outputAudioDeviceInfo.nearestFormat(*original);
-    }
-    //
-    audioOutputDevice.reset( new QAudioOutput(outputAudioDeviceInfo,*original) ) ;
+    originalAudioBuffer.reset(original);
+    emit playerReady(init());
+}
+
+bool Player::init(void)
+{
+    if( originalAudioBuffer.isNull() )
+        return false;
+    audioOutputDevice.reset( new QAudioOutput(outputAudioDeviceInfo,*originalAudioBuffer.data()) ) ;
     if( audioOutputDevice.isNull() )
-    {
-        delete original;
-        return;
-    }
-    audioBufferDevice.reset(new QBuffer(original,this));
+        return false;
+    audioBufferDevice.reset(new QBuffer(originalAudioBuffer.data(),this));
     if( ! audioBufferDevice->open(QIODevice::ReadOnly) )
     {
-        delete original;
         audioBufferDevice.reset();
         audioOutputDevice.reset();
-        return;
+        return false;
     }
     setNotifyInterval(notifyInterval);
     setVolume();
     connect(audioOutputDevice.data(),SIGNAL(stateChanged(QAudio::State)),this,SIGNAL(stateChanged(QAudio::State)));
     connect(audioOutputDevice.data(),SIGNAL(stateChanged(QAudio::State)),this,SLOT(stateChangedSlot(QAudio::State)));
     connect(audioOutputDevice.data(),SIGNAL(notify()),this,SLOT(notifySlot()));
-    originalAudioBuffer.reset(original);
-    seek(0);
-    emit playerReady(true);
+    return true;
 }
+
+
 
 bool Player::seek(qint32 to)
 {
@@ -173,10 +168,30 @@ bool Player::seek(qint32 to)
     return audioBufferDevice->seek(qMin(originalAudioBuffer->bytesForDuration(to*1000),originalAudioBuffer->size()));
 }
 
-bool Player::setAudioDevice(const QAudioDeviceInfo & info)
+void Player::setAudioDevice(const QAudioDeviceInfo & info)
 {
     if( info.isNull() )
-        return false;
+        return;
     outputAudioDeviceInfo = info;
-    return true;
+    if( originalAudioBuffer.isNull() )
+    {
+        emit playerReady(false);
+        return;
+    }
+    //
+    bool restart = false;
+    qint32 pos   = 0;
+    if( ! audioOutputDevice.isNull() )
+    {
+        restart = (audioOutputDevice->state() == QAudio::ActiveState);
+        if( restart )
+            audioOutputDevice->stop();
+        pos = currentTime();
+    }
+    //
+    emit playerReady(init());
+    //
+    seek(pos);
+    if( restart )
+        start();
 }

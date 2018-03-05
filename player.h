@@ -16,18 +16,17 @@ class Player: public QObject
     Q_OBJECT
 protected:
     QAudioDeviceInfo outputAudioDeviceInfo;
-    QScopedPointer<AudioBuffer>    originalAudioBuffer;
-    QScopedPointer<AudioBuffer> transformedAudioBuffer;
+    QScopedPointer<AudioBuffer>  originalAudioBuffer;
     QScopedPointer<AudioFileLoader> fileLoader;
     QScopedPointer<QAudioOutput> audioOutputDevice;
     QScopedPointer<QBuffer> audioBufferDevice;
     bool autoRestart;
     int notifyInterval;
     qreal volume;
+    bool init(void);
 public:
     Player(void);
     virtual ~Player();
-    bool setAudioDevice(const QAudioDeviceInfo & info);
     bool open(const QString & name);
     void close(void);
     bool start(qint32 from = 0);
@@ -45,6 +44,7 @@ public:
     //
 public slots:
     void setVolume(int v = -1);
+    void setAudioDevice(const QAudioDeviceInfo & info);
 protected slots:
     void stateChangedSlot(QAudio::State state);
     void notifySlot(void);
