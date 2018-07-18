@@ -5,6 +5,9 @@ extern "C" {
 #include <libswresample/swresample.h>
 }
 #include "audiofile.h"
+#include <QDebug>
+#include <QAudioDeviceInfo>
+#include <QAudioFormat>
 
 bool AudioFile::ffmpegInit = false;
 FileFormatVector AudioFile::audioFormats;
@@ -110,7 +113,7 @@ AudioFile::AudioFile(AudioBuffer *b):buffer(b)
 {
     if( ! ffmpegInit )
     {
-        av_log_set_level(AV_LOG_QUIET);
+        av_log_set_level(AV_LOG_TRACE);
         av_register_all();
         ffmpegInit = true;
     }
@@ -122,6 +125,7 @@ AudioFile::AudioFile(AudioBuffer *b):buffer(b)
     //
     if( buffer == 0 )
         buffer = new AudioBuffer();
+//        buffer = new AudioBuffer( QAudioDeviceInfo::defaultOutputDevice().preferredFormat() );
 }
 
 AudioFile::~AudioFile()
@@ -138,10 +142,10 @@ void AudioFile::release(void)
     }
     if( formatContext != 0 )
     {
-        if( formatContext->iformat != 0 )
-            avformat_close_input(&formatContext);
-        else
-            avformat_free_context(formatContext);
+//        if( formatContext->iformat != 0 )
+//            avformat_close_input(&formatContext);
+//        else
+        avformat_free_context(formatContext);
         formatContext = 0;
     }
     if( iframe != 0 )

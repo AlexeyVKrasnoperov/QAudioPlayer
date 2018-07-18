@@ -142,6 +142,9 @@ bool Player::init(void)
     if( originalAudioBuffer.isNull() )
         return false;
     audioOutputDevice.reset( new QAudioOutput(outputAudioDeviceInfo,*originalAudioBuffer.data()) ) ;
+//    audioOutputDevice.reset( new QAudioOutput(outputAudioDeviceInfo,outputAudioDeviceInfo.preferredFormat()) ) ;
+    qDebug() << outputAudioDeviceInfo.preferredFormat();
+
     if( audioOutputDevice.isNull() )
         return false;
     audioBufferDevice.reset(new QBuffer(originalAudioBuffer.data(),this));
@@ -151,6 +154,7 @@ bool Player::init(void)
         audioOutputDevice.reset();
         return false;
     }
+    audioBufferDevice->seek(0);
     setNotifyInterval(notifyInterval);
     setVolume();
     connect(audioOutputDevice.data(),SIGNAL(stateChanged(QAudio::State)),this,SIGNAL(stateChanged(QAudio::State)));

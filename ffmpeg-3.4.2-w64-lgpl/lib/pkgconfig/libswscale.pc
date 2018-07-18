@@ -1,0 +1,14 @@
+prefix=/home/alexey/ffmpeg-3.4.2-w64-lgpl
+exec_prefix=${prefix}
+libdir=/home/alexey/ffmpeg-3.4.2-w64-lgpl/lib
+includedir=/home/alexey/ffmpeg-3.4.2-w64-lgpl/include
+
+Name: libswscale
+Description: FFmpeg image rescaling library
+Version: 4.8.100
+Requires: 
+Requires.private: libavutil >= 55.78.100
+Conflicts:
+Libs: -L${libdir}  -lswscale 
+Libs.private: -lm
+Cflags: -I${includedir}

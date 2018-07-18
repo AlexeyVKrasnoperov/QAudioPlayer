@@ -1,6 +1,7 @@
 #include "formslidercontrol.h"
 #include "ui_formslidercontrol.h"
 #include <QFontMetrics>
+#include <QIcon>
 
 FormSliderControl::FormSliderControl(const QString & title, const QString & unit, QWidget *parent, int id):
     QWidget(parent), ui(new Ui::FormSliderControl),  Id(id)

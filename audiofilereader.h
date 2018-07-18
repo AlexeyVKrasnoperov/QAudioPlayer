@@ -2,7 +2,9 @@
 #define AUDIOFILEREADER_H
 
 #include <QFileInfo>
+#include <QAudioDeviceInfo>
 #include "audiofile.h"
+#include <QDebug>
 
 class AudioFileReader: public AudioFile
 {

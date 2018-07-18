@@ -1,4 +1,6 @@
 #include "audiobuffer.h"
+#include <QAudioOutput>
+#include <QAudioDeviceInfo>
 #include <algorithm>
 using namespace std;
 
@@ -10,4 +12,3 @@ AudioBuffer::AudioBuffer(const QAudioFormat & format, QObject *parent):QObject(p
 AudioBuffer::~AudioBuffer()
 {
 }
-

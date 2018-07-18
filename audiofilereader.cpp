@@ -3,7 +3,9 @@
 
 bool AudioFileReader::Read(const QString & fName)
 {
-    if( buffer->isValid() || ! buffer->isEmpty() )
+    //    if( buffer->isValid() || ! buffer->isEmpty() )
+    //        return false;
+    if( ! buffer->isEmpty() )
         return false;
     fileName = fName;
     if( ! Decode() )
@@ -31,6 +33,7 @@ bool AudioFileReader::Decode(void)
     AVStream *audioStream = formatContext->streams[streamIndex];
     codecContext = audioStream->codec;
     codecContext->codec = cdc;
+    //
     if( avcodec_open2(codecContext, cdc, NULL) != 0)
         return false;
     if( codecContext->channel_layout == 0 )
@@ -43,11 +46,14 @@ bool AudioFileReader::Decode(void)
     //
     //  Init QAudioFormat format
     //
-    buffer->setByteOrder(QAudioFormat::LittleEndian);
-    buffer->setSampleRate(codecContext->sample_rate);
-    buffer->setSampleSize(8*av_get_bytes_per_sample(codecContext->sample_fmt));
-    buffer->setSampleType(getSampleType(codecContext->sample_fmt));
-    buffer->setChannelCount((codecContext->channel_layout == AV_CH_LAYOUT_MONO) ? 1 : 2);
+    if( ! buffer->isValid() )
+    {
+        buffer->setByteOrder(QAudioFormat::LittleEndian);
+        buffer->setSampleRate(codecContext->sample_rate);
+        buffer->setSampleSize(8*av_get_bytes_per_sample(codecContext->sample_fmt));
+        buffer->setSampleType(getSampleType(codecContext->sample_fmt));
+        buffer->setChannelCount((codecContext->channel_layout == AV_CH_LAYOUT_MONO) ? 1 : 2);
+    }
     //
     AVPacket readingPacket;
     av_init_packet(&readingPacket);
@@ -85,11 +91,6 @@ bool AudioFileReader::DecodePacket(AVPacket & packet)
         int result = avcodec_decode_audio4(codecContext, iframe, &gotFrame, &decodingPacket);
         if( (result >= 0) && gotFrame)
         {
-            decodingPacket.size -= result;
-            decodingPacket.data += result;
-            decodingPacket.dts = AV_NOPTS_VALUE;
-            decodingPacket.pts = AV_NOPTS_VALUE;
-            //
             const AVFrame *f = ConvertFrame(iframe);
             if( f != 0 )
             {
@@ -99,6 +100,26 @@ bool AudioFileReader::DecodePacket(AVPacket & packet)
             }
             else
                 return false;
+            //
+            decodingPacket.size -= result;
+            decodingPacket.data += result;
+            decodingPacket.dts = AV_NOPTS_VALUE;
+            decodingPacket.pts = AV_NOPTS_VALUE;
+//            if (decodingPacket.size < 4096)
+//            {
+//                qDebug() << decodingPacket.size << 4096;
+//                /* Refill the input buffer, to avoid trying to decode
+//                          * incomplete frames. Instead of this, one could also use
+//                          * a parser, or use a proper container format through
+//                          * libavformat. */
+//                //                memmove(inbuf, avpkt.data, avpkt.size);
+//                //                avpkt.data = inbuf;
+//                //                len = fread(avpkt.data + avpkt.size, 1,
+//                //                            AUDIO_INBUF_SIZE - avpkt.size, f);
+//                //                if (len > 0)
+//                //                    avpkt.size += len;
+//            }
+
         }
         else
         {
