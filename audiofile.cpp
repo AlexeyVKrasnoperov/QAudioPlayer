@@ -76,11 +76,11 @@ const QStringList & AudioFile::getAudioFileFilters(QString & selected)
     if( ! selected.isEmpty() )
     {
         QString found;
-        for( int i = 0; i < int(audioFormats.size()); i++ )
+        for( size_t i = 0; i < audioFormats.size(); i++ )
         {
             if( selected.toUpper() == audioFormats[i].extension.toUpper() )
             {
-                found = audioFileFilters[i];
+                found = audioFileFilters.at(int(i));
                 break;
             }
         }
@@ -96,11 +96,11 @@ const QString & AudioFile::getSelectedAudioFileSuffix(const QString & selected)
 {
     if( ! selected.isEmpty() )
     {
-        for( int i = 0; i < int(audioFileFilters.size()); i++ )
+        for( size_t i = 0; i < size_t(audioFileFilters.size()); i++ )
         {
-            if( i < int(audioFormats.size()) )
+            if( i < audioFormats.size() )
             {
-                if( selected == audioFileFilters[i] )
+                if( selected == audioFileFilters.at(int(i)) )
                     return audioFormats[i].extension;
             }
         }
