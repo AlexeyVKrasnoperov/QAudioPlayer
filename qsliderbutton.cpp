@@ -9,7 +9,7 @@ QSliderButton::QSliderButton(const QString & title, const QString & unit, QWidge
     setToolTip(title);
     setStatusTip(title);
     setPopupMode(QToolButton::InstantPopup);
-    QActionSlider *a = new QActionSlider(this);
+    auto *a = new QActionSlider(this);
     control = a->getControl();
     control->initLabels(title,unit);
     control->init(0,100,100,1,10);
@@ -30,7 +30,7 @@ void QSliderButton::setIcon(const QIcon &icon)
 {
     QToolButton::setIcon(icon);
     QLabel *l = control->getTitle();
-    if( l != 0 )
+    if( l != nullptr )
         l->setPixmap(icon.pixmap(QSize(16,16)));
 }
 

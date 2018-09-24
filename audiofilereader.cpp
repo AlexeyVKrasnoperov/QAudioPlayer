@@ -1,11 +1,8 @@
 #include "audiofilereader.h"
-#include <QDebug>
 
 bool AudioFileReader::Read(const QString & fName)
 {
-    //    if( buffer->isValid() || ! buffer->isEmpty() )
-    //        return false;
-    if( ! buffer->isEmpty() )
+    if( buffer->isValid() || ! buffer->isEmpty() )
         return false;
     fileName = fName;
     if( ! Decode() )
@@ -20,11 +17,11 @@ bool AudioFileReader::Read(const QString & fName)
 }
 
 
-bool AudioFileReader::Decode(void)
+bool AudioFileReader::Decode()
 {
-    if( avformat_open_input(&formatContext, fileName.toLocal8Bit(), NULL, NULL) != 0)
+    if( avformat_open_input(&formatContext, fileName.toLocal8Bit(), nullptr, nullptr) != 0)
         return false;
-    if (avformat_find_stream_info(formatContext, NULL) < 0)
+    if (avformat_find_stream_info(formatContext, nullptr) < 0)
         return false;
     AVCodec* cdc = nullptr;
     int streamIndex = av_find_best_stream(formatContext, AVMEDIA_TYPE_AUDIO, -1, -1, &cdc, 0);
@@ -34,7 +31,7 @@ bool AudioFileReader::Decode(void)
     codecContext = audioStream->codec;
     codecContext->codec = cdc;
     //
-    if( avcodec_open2(codecContext, cdc, NULL) != 0)
+    if( avcodec_open2(codecContext, cdc, nullptr) != 0)
         return false;
     if( codecContext->channel_layout == 0 )
     {
@@ -71,14 +68,14 @@ bool AudioFileReader::Decode(void)
         rv = DecodePacket(readingPacket);
     }
     //
-    codecContext = 0;
+    codecContext = nullptr;
     release();
     return rv ;
 }
 
 bool AudioFileReader::DecodePacket(AVPacket & packet)
 {
-    if( iframe == 0 )
+    if( iframe == nullptr )
     {
         iframe = av_frame_alloc();
         if( ! iframe )
@@ -92,9 +89,9 @@ bool AudioFileReader::DecodePacket(AVPacket & packet)
         if( (result >= 0) && gotFrame)
         {
             const AVFrame *f = ConvertFrame(iframe);
-            if( f != 0 )
+            if( f != nullptr )
             {
-                int data_size = av_samples_get_buffer_size(NULL, codecContext->channels,
+                int data_size = av_samples_get_buffer_size(nullptr, codecContext->channels,
                                                            f->nb_samples,codecContext->sample_fmt,1);
                 buffer->append((const char *)f->data[0],data_size);
             }
@@ -105,21 +102,6 @@ bool AudioFileReader::DecodePacket(AVPacket & packet)
             decodingPacket.data += result;
             decodingPacket.dts = AV_NOPTS_VALUE;
             decodingPacket.pts = AV_NOPTS_VALUE;
-//            if (decodingPacket.size < 4096)
-//            {
-//                qDebug() << decodingPacket.size << 4096;
-//                /* Refill the input buffer, to avoid trying to decode
-//                          * incomplete frames. Instead of this, one could also use
-//                          * a parser, or use a proper container format through
-//                          * libavformat. */
-//                //                memmove(inbuf, avpkt.data, avpkt.size);
-//                //                avpkt.data = inbuf;
-//                //                len = fread(avpkt.data + avpkt.size, 1,
-//                //                            AUDIO_INBUF_SIZE - avpkt.size, f);
-//                //                if (len > 0)
-//                //                    avpkt.size += len;
-//            }
-
         }
         else
         {
@@ -137,39 +119,39 @@ const AVFrame * AudioFileReader::ConvertFrame(const AVFrame* frame)
             (buffer->sampleRate() == codecContext->sample_rate ) )
         return frame;
     int nb_samples = av_rescale_rnd(frame->nb_samples,buffer->sampleRate(),codecContext->sample_rate,AV_ROUND_UP);
-    if( oframe != 0 )
+    if( oframe != nullptr )
     {
         if( oframe->nb_samples < nb_samples )
             av_frame_free(&oframe);
     }
-    if( oframe == 0 )
+    if( oframe == nullptr )
     {
         oframe = alloc_audio_frame(getAVSampleFormat(buffer),getAVChannelLayout(buffer),buffer->sampleRate(),nb_samples);
-        if( oframe == 0 )
-            return 0;
+        if( oframe == nullptr )
+            return nullptr;
     }
     memset(oframe->data[0],0,oframe->linesize[0]);
-    if( swr_ctx == 0 )
+    if( swr_ctx == nullptr )
     {
-        swr_ctx = swr_alloc_set_opts(NULL,
+        swr_ctx = swr_alloc_set_opts(nullptr,
                                      getAVChannelLayout(buffer), getAVSampleFormat(buffer),buffer->sampleRate(),
                                      codecContext->channel_layout,codecContext->sample_fmt,codecContext->sample_rate,
-                                     0, NULL);
+                                     0, nullptr);
         if( ! swr_ctx )
-            return 0;
+            return nullptr;
         if( swr_init(swr_ctx) < 0)
         {
             swr_free(&swr_ctx);
-            return 0;
+            return nullptr;
         }
     }
     //
     int got_samples = swr_convert(swr_ctx,oframe->data,nb_samples,(const uint8_t **)iframe->data,iframe->nb_samples);
     if( got_samples < 0 )
-        return 0;
+        return nullptr;
     //
     while( got_samples > 0 )
-        got_samples = swr_convert(swr_ctx,oframe->data,nb_samples,0,0);
+        got_samples = swr_convert(swr_ctx,oframe->data,nb_samples,nullptr,0);
     return oframe;
 }
 

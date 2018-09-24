@@ -9,6 +9,4 @@ AudioBuffer::AudioBuffer(const QAudioFormat & format, QObject *parent):QObject(p
     setCodec("audio/pcm");
 }
 
-AudioBuffer::~AudioBuffer()
-{
-}
+AudioBuffer::~AudioBuffer() = default;

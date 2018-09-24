@@ -4,12 +4,11 @@
 #include <QFileInfo>
 #include <QAudioDeviceInfo>
 #include "audiofile.h"
-#include <QDebug>
 
 class AudioFileReader: public AudioFile
 {
 protected:
-    bool Decode(void);
+    bool Decode();
     bool DecodePacket(AVPacket & packet);
     const AVFrame* ConvertFrame(const AVFrame* frame);
 public:
@@ -39,12 +38,12 @@ class AudioFileLoader: public QThread
     Q_OBJECT
 protected:
     QString fileName;
-    virtual void run(void)
+    virtual void run()
     {
         emit ready(AudioFileReader::CreateBuffer(fileName));
     }
 public:
-    AudioFileLoader(void)
+    AudioFileLoader()
     {
         fileName.clear();
     }

@@ -29,8 +29,8 @@ private slots:
 
     void on_pushButtonPlay_clicked(bool checked);
 
-    void playerStarted(void);
-    void playerStoped(void);
+    void playerStarted();
+    void playerStoped();
     void playerReadySlot(bool);
     void playerPositionChanged(qint32);
 
@@ -50,7 +50,7 @@ private slots:
 
 protected:
     QSliderButton *audioVolume;
-    QAudioDeviceInfo getSelectedDevice(void);
+    QAudioDeviceInfo getSelectedDevice();
     bool  selectComboBoxItem(QComboBox * b, const QString & txt);
     QString audioFileSuffixLoad;
     QString workingDir;

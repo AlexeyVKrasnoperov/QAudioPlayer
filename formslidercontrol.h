@@ -19,22 +19,22 @@ public:
     void init(int min, int v, int max, int step = 1, int pageStep = 10);
     void initLabels(const QString & title, const QString & unit = QString());
     void initLabels(const QIcon & icon, const QString & unit = QString());
-    QLabel  * getTitle(void);
-    QLabel  * getUnit(void);
+    QLabel  * getTitle();
+    QLabel  * getUnit();
     void setValue(int v);
-    int  value(void);
+    int  value();
     void setValide(bool valide);
     void setColor(const QColor & color);
     void setLayoutDirection(Qt::LayoutDirection direction);
     void setRange(int vmin, int vmax);
-    QSlider * getSlider(void);
+    QSlider * getSlider();
 private slots:
     void on_horizontalSlider_valueChanged(int value);
-    void sliderPressedSlot(void)
+    void sliderPressedSlot()
     {
         sliderPressed = true;
     }
-    void sliderReleasedSlot(void);
+    void sliderReleasedSlot();
     void valueChangedSlot(int v);
 private:
     Ui::FormSliderControl *ui;

@@ -22,7 +22,7 @@ public:
     static const QString & getSelectedAudioFileSuffix(const QString & selected);
 protected:
     static bool ffmpegInit;
-    static void initAudioFileFilters(void);
+    static void initAudioFileFilters();
     static FileFormatVector audioFormats;
     static QStringList audioFileFilters;
     //
@@ -74,12 +74,12 @@ protected:
         return QAudioFormat::SignedInt;
     }
     //
-    virtual void release(void);
+    virtual void release();
     //
 public:
     AudioFile(AudioBuffer *b = 0);
     virtual ~AudioFile();
-    AudioBuffer * getBuffer(void)
+    AudioBuffer * getBuffer()
     {
         return buffer;
     }

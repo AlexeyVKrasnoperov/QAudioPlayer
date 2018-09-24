@@ -4,7 +4,6 @@
 #include <QIcon>
 #include <QSettings>
 #include <QFileDialog>
-#include <QDebug>
 #include "audiofile.h"
 #include "audiofilereader.h"
 #include "player.h"
@@ -15,7 +14,7 @@ QAudioDialog::QAudioDialog(QWidget *parent) :
     ui(new Ui::QAudioDialog)
 {    
     ui->setupUi(this);
-    player = 0;
+    player = nullptr;
     workingDir = QDir::homePath();
     //
     ui->labelPosition->setMinimumWidth(QFontMetrics(ui->labelPosition->font()).width("0000.000"));
@@ -104,12 +103,12 @@ void QAudioDialog::playerReadySlot(bool ready)
     ui->labelPosition->setText(tr("%1 c").arg(0.,0,'f',3));
     setWindowTitle(tr("QtAudioPlayer"));
     //
-    if( (player != 0) && ready )
+    if( (player != nullptr) && ready )
     {
         qint64 d = player->getDuration();
         if( d > 0 )
         {
-            ui->horizontalSliderProgress->setMaximum(d);
+            ui->horizontalSliderProgress->setMaximum(int(d));
             ui->groupBoxControl->setTitle(tr("Duration %1 c").arg(0.001*d,0,'f',3));
             setWindowTitle(tr("QtAudioPlayer : \"%1\"").arg(QFileInfo(player->getFileName()).baseName()));
         }
@@ -130,13 +129,13 @@ void QAudioDialog::on_pushButtonPlay_clicked(bool checked)
         player->stop();
 }
 
-void QAudioDialog::playerStarted(void)
+void QAudioDialog::playerStarted()
 {
     ui->pushButtonPlay->setIcon(QIcon(":/icons/media-playback-stop-7.png"));
     ui->pushButtonPlay->setChecked(true);
 }
 
-void QAudioDialog::playerStoped(void)
+void QAudioDialog::playerStoped()
 {
     ui->pushButtonPlay->setIcon(QIcon(":/icons/media-playback-start-7.png"));
     ui->pushButtonPlay->setChecked(false);
@@ -176,11 +175,11 @@ void QAudioDialog::on_pushButtonGoEnd_clicked()
 void QAudioDialog::on_comboBoxOutputDevice_currentIndexChanged(int index)
 {
     Q_UNUSED(index);
-    if( player != 0 )
+    if( player != nullptr )
         player->setAudioDevice(getSelectedDevice());
 }
 
-QAudioDeviceInfo QAudioDialog::getSelectedDevice(void)
+QAudioDeviceInfo QAudioDialog::getSelectedDevice()
 {
     int idx = ui->comboBoxOutputDevice->currentData().toInt();
     QList<QAudioDeviceInfo> deviceList = QAudioDeviceInfo::availableDevices(QAudio::AudioOutput);

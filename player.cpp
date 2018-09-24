@@ -2,11 +2,10 @@
 #include <QBuffer>
 #include <QAudioOutput>
 #include <QIODevice>
-#include <QDebug>
 #include "audiobuffer.h"
 #include "audiofilereader.h"
 
-Player::Player(void)
+Player::Player()
 {
     volume = 1;
     notifyInterval = -1;
@@ -14,12 +13,12 @@ Player::Player(void)
     outputAudioDeviceInfo = QAudioDeviceInfo::defaultOutputDevice();
 }
 
-Player::~Player(void)
+Player::~Player()
 {
     close();
 }
 
-QString Player::getFileName(void)
+QString Player::getFileName()
 {
     return ( originalAudioBuffer.isNull() ) ? QString() :  originalAudioBuffer.data()->objectName();
 }
@@ -44,7 +43,7 @@ bool Player::open(const QString & name)
 }
 
 
-void Player::close(void)
+void Player::close()
 {
     if( ! audioOutputDevice.isNull() )
     {
@@ -69,12 +68,12 @@ bool Player::start(qint32 from)
     return true;
 }
 
-void Player::notifySlot(void)
+void Player::notifySlot()
 {
     emit currentTimeChanged(currentTime());
 }
 
-void Player::stop(void)
+void Player::stop()
 {
     if( audioOutputDevice.isNull() )
         return;
@@ -82,12 +81,12 @@ void Player::stop(void)
         audioOutputDevice->stop();
 }
 
-qint32 Player::currentTime(void)
+qint32 Player::currentTime()
 {
     return ( audioBufferDevice.isNull() || audioOutputDevice.isNull() ) ? -1 : audioOutputDevice->format().durationForBytes(audioBufferDevice->pos())/1000;
 }
 
-qint32 Player::getDuration(void)
+qint32 Player::getDuration()
 {
     return ( originalAudioBuffer.isNull() ) ? -1 : originalAudioBuffer->duration()/1000;
 }
@@ -137,14 +136,11 @@ void Player::bufferReadySlot(AudioBuffer * original)
     emit playerReady(init());
 }
 
-bool Player::init(void)
+bool Player::init()
 {
     if( originalAudioBuffer.isNull() )
         return false;
     audioOutputDevice.reset( new QAudioOutput(outputAudioDeviceInfo,*originalAudioBuffer.data()) ) ;
-//    audioOutputDevice.reset( new QAudioOutput(outputAudioDeviceInfo,outputAudioDeviceInfo.preferredFormat()) ) ;
-    qDebug() << outputAudioDeviceInfo.preferredFormat();
-
     if( audioOutputDevice.isNull() )
         return false;
     audioBufferDevice.reset(new QBuffer(originalAudioBuffer.data(),this));

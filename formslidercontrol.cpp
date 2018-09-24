@@ -78,7 +78,7 @@ void FormSliderControl::setRange(int vmin, int vmax)
     ui->labelValue->setText(QString::number(ui->horizontalSlider->value()));
 }
 
-int FormSliderControl::value(void)
+int FormSliderControl::value()
 {
     return ui->horizontalSlider->value();
 }
@@ -89,22 +89,22 @@ void FormSliderControl::on_horizontalSlider_valueChanged(int value)
     ui->labelValue->setText(QString::number(value));
 }
 
-QLabel * FormSliderControl::getTitle(void)
+QLabel * FormSliderControl::getTitle()
 {
     return ui->labelTitle;
 }
 
-QLabel * FormSliderControl::getUnit(void)
+QLabel * FormSliderControl::getUnit()
 {
     return ui->labelUnit;
 }
 
-QSlider * FormSliderControl::getSlider(void)
+QSlider * FormSliderControl::getSlider()
 {
     return ui->horizontalSlider;
 }
 
-void FormSliderControl::sliderReleasedSlot(void)
+void FormSliderControl::sliderReleasedSlot()
 {
     int v = roundValue(ui->horizontalSlider->value());
     sliderPressed = false;

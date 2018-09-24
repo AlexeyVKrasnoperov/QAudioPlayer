@@ -16,7 +16,7 @@ public:
     {
         delete control;
     }
-    FormSliderControl * getControl(void)
+    FormSliderControl * getControl()
     {
         return control;
     }

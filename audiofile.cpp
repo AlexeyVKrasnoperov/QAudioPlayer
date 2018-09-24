@@ -5,7 +5,6 @@ extern "C" {
 #include <libswresample/swresample.h>
 }
 #include "audiofile.h"
-#include <QDebug>
 #include <QAudioDeviceInfo>
 #include <QAudioFormat>
 
@@ -30,7 +29,7 @@ AVFrame * AudioFile::alloc_audio_frame(AVSampleFormat sample_fmt, uint64_t chann
     return f;
 }
 
-void AudioFile::initAudioFileFilters(void)
+void AudioFile::initAudioFileFilters()
 {
     if( ! audioFileFilters.empty() )
         return;
@@ -53,16 +52,16 @@ void AudioFile::initAudioFileFilters(void)
         audioFormats.push_back(FileFormat("ogg","Ogg Vorbis"));
     }
     QString allFormats;
-    for( size_t i = 0; i < audioFormats.size(); i++ )
+    for( const auto & format : audioFormats)
     {
         QString filter(QObject::tr("Файл формата "));
         //filter += QString(audioFileFormats[i].extension).toUpper();
-        filter += audioFormats[i].description;
-        filter += QString(" (*.%1)").arg(audioFormats[i].extension);
+        filter += format.description;
+        filter += QString(" (*.%1)").arg(format.extension);
         audioFileFilters << filter;
         if( ! allFormats.isEmpty() )
             allFormats.append(" ");
-        allFormats += QString("*.%1").arg(audioFormats[i].extension);
+        allFormats += QString("*.%1").arg(format.extension);
     }
     allFormats.prepend(QObject::tr("Все поддерживаемые форматы ("));
     allFormats.append(QObject::tr(")"));
@@ -117,13 +116,13 @@ AudioFile::AudioFile(AudioBuffer *b):buffer(b)
         av_register_all();
         ffmpegInit = true;
     }
-    iframe = 0;
-    oframe = 0;
-    codecContext  = 0;
-    formatContext = 0;
-    swr_ctx = 0;
+    iframe = nullptr;
+    oframe = nullptr;
+    codecContext  = nullptr;
+    formatContext = nullptr;
+    swr_ctx = nullptr;
     //
-    if( buffer == 0 )
+    if( buffer == nullptr )
         buffer = new AudioBuffer();
 //        buffer = new AudioBuffer( QAudioDeviceInfo::defaultOutputDevice().preferredFormat() );
 }
@@ -133,24 +132,24 @@ AudioFile::~AudioFile()
     release();
 }
 
-void AudioFile::release(void)
+void AudioFile::release()
 {
-    if( codecContext != 0 )
+    if( codecContext != nullptr )
     {
         avcodec_free_context(&codecContext);
-        codecContext = 0;
+        codecContext = nullptr;
     }
-    if( formatContext != 0 )
+    if( formatContext != nullptr )
     {
 //        if( formatContext->iformat != 0 )
 //            avformat_close_input(&formatContext);
 //        else
         avformat_free_context(formatContext);
-        formatContext = 0;
+        formatContext = nullptr;
     }
-    if( iframe != 0 )
+    if( iframe != nullptr )
         av_frame_free(&iframe);
-    if( oframe != 0 )
+    if( oframe != nullptr )
         av_frame_free(&oframe);
     if( swr_ctx )
         swr_free(&swr_ctx);

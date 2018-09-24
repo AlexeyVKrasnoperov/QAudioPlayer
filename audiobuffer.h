@@ -15,7 +15,7 @@ public:
     {
         return durationForBytes(size());
     }
-    inline qint32 frameCount(void)
+    inline qint32 frameCount()
     {
         return size()/bytesPerFrame();
     }

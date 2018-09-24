@@ -23,38 +23,38 @@ protected:
     bool autoRestart;
     int notifyInterval;
     qreal volume;
-    bool init(void);
+    bool init();
 public:
-    Player(void);
+    Player();
     virtual ~Player();
     bool open(const QString & name);
-    void close(void);
+    void close();
     bool start(qint32 from = 0);
-    void stop(void);
+    void stop();
     bool seek(qint32 to);
-    qint32 getDuration(void);
-    qint32 currentTime(void);
+    qint32 getDuration();
+    qint32 currentTime();
     void setNotifyInterval(int ms);
     void setAutoRestart(bool f)
     {
         autoRestart = f;
     }
     //
-    QString getFileName(void);
+    QString getFileName();
     //
 public slots:
     void setVolume(int v = -1);
     void setAudioDevice(const QAudioDeviceInfo & info);
 protected slots:
     void stateChangedSlot(QAudio::State state);
-    void notifySlot(void);
+    void notifySlot();
     void bufferReadySlot(AudioBuffer *original);
 signals:
     void stateChanged(QAudio::State);
     void currentTimeChanged(qint32 time);
-    void errorSignal(void);
-    void started(void);
-    void stoped(void);
+    void errorSignal();
+    void started();
+    void stoped();
     void playerReady(bool ready);
 };
 
