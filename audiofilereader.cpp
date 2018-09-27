@@ -62,11 +62,11 @@ bool AudioFileReader::Decode()
         av_free_packet(&readingPacket);
     }
     //
-    if (cdc->capabilities & CODEC_CAP_DELAY)
-    {
-        av_init_packet(&readingPacket);
-        rv = DecodePacket(readingPacket);
-    }
+//    if (cdc->capabilities & CODEC_CAP_DELAY)
+//    {
+//        av_init_packet(&readingPacket);
+//        rv = DecodePacket(readingPacket);
+//    }
     //
     codecContext = nullptr;
     release();

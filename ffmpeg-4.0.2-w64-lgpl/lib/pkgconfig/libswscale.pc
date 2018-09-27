@@ -1,0 +1,14 @@
+prefix=ffmpeg-4.0.2-w64-lgpl
+exec_prefix=${prefix}
+libdir=ffmpeg-4.0.2-w64-lgpl/lib
+includedir=ffmpeg-4.0.2-w64-lgpl/include
+
+Name: libswscale
+Description: FFmpeg image rescaling library
+Version: 5.1.100
+Requires: 
+Requires.private: libavutil >= 56.14.100
+Conflicts:
+Libs: -L${libdir}  -lswscale 
+Libs.private: -lm
+Cflags: -I${includedir}

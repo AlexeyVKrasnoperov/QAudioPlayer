@@ -1,0 +1,14 @@
+prefix=ffmpeg-4.0.2-w64-lgpl
+exec_prefix=${prefix}
+libdir=ffmpeg-4.0.2-w64-lgpl/lib
+includedir=ffmpeg-4.0.2-w64-lgpl/include
+
+Name: libavutil
+Description: FFmpeg utility library
+Version: 56.14.100
+Requires: 
+Requires.private: 
+Conflicts:
+Libs: -L${libdir}  -lavutil 
+Libs.private: -lm -luser32 -lbcrypt
+Cflags: -I${includedir}

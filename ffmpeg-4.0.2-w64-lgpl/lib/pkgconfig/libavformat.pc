@@ -1,0 +1,14 @@
+prefix=ffmpeg-4.0.2-w64-lgpl
+exec_prefix=${prefix}
+libdir=ffmpeg-4.0.2-w64-lgpl/lib
+includedir=ffmpeg-4.0.2-w64-lgpl/include
+
+Name: libavformat
+Description: FFmpeg container format library
+Version: 58.12.100
+Requires: 
+Requires.private: libavcodec >= 58.18.100, libswresample >= 3.1.100, libavutil >= 56.14.100
+Conflicts:
+Libs: -L${libdir}  -lavformat 
+Libs.private: -lm -lsecur32 -lws2_32
+Cflags: -I${includedir}
