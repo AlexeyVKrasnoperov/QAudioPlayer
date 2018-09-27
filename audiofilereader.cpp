@@ -28,8 +28,8 @@ bool AudioFileReader::Decode()
     if( streamIndex < 0 )
         return false;
     AVStream *audioStream = formatContext->streams[streamIndex];
-    codecContext = audioStream->codec;
-    codecContext->codec = cdc;
+    codecContext = avcodec_alloc_context3(nullptr);
+    avcodec_parameters_to_context(codecContext, audioStream->codecpar);
     //
     if( avcodec_open2(codecContext, cdc, nullptr) != 0)
         return false;
@@ -62,13 +62,11 @@ bool AudioFileReader::Decode()
         av_packet_unref(&readingPacket);
     }
     //
-//    if (cdc->capabilities & CODEC_CAP_DELAY)
-//    {
-//        av_init_packet(&readingPacket);
-//        rv = DecodePacket(readingPacket);
-//    }
-    //
-    codecContext = nullptr;
+    if (cdc->capabilities & AV_CODEC_CAP_DELAY)
+    {
+        av_init_packet(&readingPacket);
+        rv = DecodePacket(readingPacket);
+    }
     release();
     return rv ;
 }
@@ -97,11 +95,8 @@ bool AudioFileReader::DecodePacket(AVPacket & packet)
             }
             else
                 return false;
-            //
             decodingPacket.size -= result;
             decodingPacket.data += result;
-            decodingPacket.dts = AV_NOPTS_VALUE;
-            decodingPacket.pts = AV_NOPTS_VALUE;
         }
         else
         {
