@@ -59,7 +59,7 @@ bool AudioFileReader::Decode()
     {
         if(readingPacket.stream_index == audioStream->index)
             rv = DecodePacket(readingPacket);
-        av_free_packet(&readingPacket);
+        av_packet_unref(&readingPacket);
     }
     //
 //    if (cdc->capabilities & CODEC_CAP_DELAY)
@@ -93,7 +93,7 @@ bool AudioFileReader::DecodePacket(AVPacket & packet)
             {
                 int data_size = av_samples_get_buffer_size(nullptr, codecContext->channels,
                                                            f->nb_samples,codecContext->sample_fmt,1);
-                buffer->append((const char *)f->data[0],data_size);
+                buffer->append(reinterpret_cast<const char*>(f->data[0]),data_size);
             }
             else
                 return false;

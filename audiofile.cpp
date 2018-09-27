@@ -113,7 +113,6 @@ AudioFile::AudioFile(AudioBuffer *b):buffer(b)
     if( ! ffmpegInit )
     {
         av_log_set_level(AV_LOG_TRACE);
-        av_register_all();
         ffmpegInit = true;
     }
     iframe = nullptr;
