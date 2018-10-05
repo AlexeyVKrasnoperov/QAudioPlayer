@@ -12,22 +12,22 @@ protected:
     bool DecodePacket(AVPacket & packet);
     const AVFrame* ConvertFrame(const AVFrame* frame);
 public:
-    AudioFileReader(const QString & fname):AudioFile(0)
+    AudioFileReader(const QString & fname)
     {
         Read(fname);
     }
-    virtual ~AudioFileReader(){}
+    virtual ~AudioFileReader() = default;
     bool Read(const QString & fName);
     static AudioBuffer *CreateBuffer(const QString & fname)
     {
         if( ! QFileInfo::exists(fname) )
-            return 0;
+            return nullptr;
         AudioFileReader f(fname);
         AudioBuffer *b = f.getBuffer();
-        if( (b != 0) && b->isEmpty() )
+        if( (b != nullptr) && b->isEmpty() )
         {            
             delete b;
-            b = 0;
+            b = nullptr;
         }
         return b;
     }
@@ -65,6 +65,8 @@ public:
 signals:
     void ready(AudioBuffer *buffer);
 };
+
+
 
 
 #endif // AUDIOFILEREADER_H

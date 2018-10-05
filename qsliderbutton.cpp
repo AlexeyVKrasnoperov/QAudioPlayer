@@ -13,8 +13,8 @@ QSliderButton::QSliderButton(const QString & title, const QString & unit, QWidge
     control = a->getControl();
     control->initLabels(title,unit);
     control->init(0,100,100,1,10);
-    connect(control,SIGNAL(valueChanged(int)),this,SLOT(updateToolTip(int)));
-    connect(control,SIGNAL(valueChanged(int)),this,SIGNAL(valueChanged(int)));
+    connect(control,static_cast<void (FormSliderControl::*)(int)>(&FormSliderControl::valueChanged),this,&QSliderButton::updateToolTip);
+    connect(control,static_cast<void (FormSliderControl::*)(int)>(&FormSliderControl::valueChanged),this,&QSliderButton::valueChanged);
     setMenu(new QMenu(this));
     menu()->addAction(a);
 }
@@ -57,7 +57,11 @@ void QSliderButton::setValue(int v)
 
 void QSliderButton::updateToolTip(int v)
 {
-    QString str(QString("%1, %2 %3").arg(windowTitle()).arg(v).arg(control->getUnit()->text()));
+    QString str(windowTitle());
+    str += QStringLiteral(", ");
+    str += QString::number(v);
+    str += QStringLiteral(" ");
+    str += control->getUnit()->text();
     control->setToolTip(str);
     control->setStatusTip(str);
     setToolTip(str);

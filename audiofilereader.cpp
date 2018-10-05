@@ -1,16 +1,15 @@
 #include "audiofilereader.h"
+#include <QtMath>
 
 bool AudioFileReader::Read(const QString & fName)
 {
-    if( buffer->isValid() || ! buffer->isEmpty() )
-        return false;
     fileName = fName;
     if( ! Decode() )
     {
         release();
         return false;
     }
-    if( buffer->isEmpty() )
+    if( (buffer == nullptr) || buffer->isEmpty() )
         return false;
     buffer->setObjectName(fName);
     return true;
@@ -40,16 +39,24 @@ bool AudioFileReader::Decode()
         else
             codecContext->channel_layout = AV_CH_LAYOUT_STEREO;
     }
-    //
-    //  Init QAudioFormat format
-    //
-    if( ! buffer->isValid() )
+    if( buffer != nullptr )
     {
+        delete buffer;
+        buffer = nullptr;
+    }
+    //
+    if( buffer == nullptr )
+    {
+        buffer = new AudioBuffer();
         buffer->setByteOrder(QAudioFormat::LittleEndian);
         buffer->setSampleRate(codecContext->sample_rate);
-        buffer->setSampleSize(8*av_get_bytes_per_sample(codecContext->sample_fmt));
+        int bytesPerSample = av_get_bytes_per_sample(codecContext->sample_fmt);
+        buffer->setSampleSize(8*bytesPerSample);
         buffer->setSampleType(getSampleType(codecContext->sample_fmt));
-        buffer->setChannelCount((codecContext->channel_layout == AV_CH_LAYOUT_MONO) ? 1 : 2);
+        buffer->setChannelCount(codecContext->channels);
+        int bps = bytesPerSample * codecContext->channels;
+        int d = bps*qCeil(1.02*double(formatContext->duration*codecContext->sample_rate) / double(AV_TIME_BASE));
+        buffer->reserve(d);
     }
     //
     AVPacket readingPacket;
@@ -66,7 +73,9 @@ bool AudioFileReader::Decode()
     {
         av_init_packet(&readingPacket);
         rv = DecodePacket(readingPacket);
+        av_packet_unref(&readingPacket);
     }
+    buffer->squeeze();
     release();
     return rv ;
 }
@@ -79,74 +88,30 @@ bool AudioFileReader::DecodePacket(AVPacket & packet)
         if( ! iframe )
             return false;
     }
-    AVPacket decodingPacket = packet;
-    while(decodingPacket.size > 0)
+    if( avcodec_send_packet(codecContext, &packet) < 0 )
+        return false;
+    forever
     {
-        int gotFrame = 0;
-        int result = avcodec_decode_audio4(codecContext, iframe, &gotFrame, &decodingPacket);
-        if( (result >= 0) && gotFrame)
+        int ret = avcodec_receive_frame(codecContext,iframe);
+        if (ret == AVERROR(EAGAIN) ) //|| ret == AVERROR_EOF)
+            break;
+        if (ret < 0)
+            return false;
+        if( av_sample_fmt_is_planar(codecContext->sample_fmt) )
         {
-            const AVFrame *f = ConvertFrame(iframe);
-            if( f != nullptr )
-            {
-                int data_size = av_samples_get_buffer_size(nullptr, codecContext->channels,
-                                                           f->nb_samples,codecContext->sample_fmt,1);
-                buffer->append(reinterpret_cast<const char*>(f->data[0]),data_size);
-            }
-            else
-                return false;
-            decodingPacket.size -= result;
-            decodingPacket.data += result;
+            int data_size = av_get_bytes_per_sample(codecContext->sample_fmt);
+            for(int i = 0; i < iframe->nb_samples; i++)
+                for(int ch = 0; ch < codecContext->channels; ch++)
+                    buffer->append(reinterpret_cast<const char*>(iframe->data[ch] + data_size*i), data_size);
         }
         else
         {
-            decodingPacket.size = 0;
-            decodingPacket.data = nullptr;
+            int data_size = av_samples_get_buffer_size(nullptr,iframe->channels,iframe->nb_samples,codecContext->sample_fmt,1);
+            buffer->append(reinterpret_cast<const char*>(iframe->data[0]),data_size);
         }
+        av_frame_unref(iframe);
     }
     return true;
 }
 
-const AVFrame * AudioFileReader::ConvertFrame(const AVFrame* frame)
-{
-    if( (getAVSampleFormat(buffer) == codecContext->sample_fmt) &&
-            (buffer->channelCount() == codecContext->channels) &&
-            (buffer->sampleRate() == codecContext->sample_rate ) )
-        return frame;
-    int nb_samples = av_rescale_rnd(frame->nb_samples,buffer->sampleRate(),codecContext->sample_rate,AV_ROUND_UP);
-    if( oframe != nullptr )
-    {
-        if( oframe->nb_samples < nb_samples )
-            av_frame_free(&oframe);
-    }
-    if( oframe == nullptr )
-    {
-        oframe = alloc_audio_frame(getAVSampleFormat(buffer),getAVChannelLayout(buffer),buffer->sampleRate(),nb_samples);
-        if( oframe == nullptr )
-            return nullptr;
-    }
-    memset(oframe->data[0],0,oframe->linesize[0]);
-    if( swr_ctx == nullptr )
-    {
-        swr_ctx = swr_alloc_set_opts(nullptr,
-                                     getAVChannelLayout(buffer), getAVSampleFormat(buffer),buffer->sampleRate(),
-                                     codecContext->channel_layout,codecContext->sample_fmt,codecContext->sample_rate,
-                                     0, nullptr);
-        if( ! swr_ctx )
-            return nullptr;
-        if( swr_init(swr_ctx) < 0)
-        {
-            swr_free(&swr_ctx);
-            return nullptr;
-        }
-    }
-    //
-    int got_samples = swr_convert(swr_ctx,oframe->data,nb_samples,(const uint8_t **)iframe->data,iframe->nb_samples);
-    if( got_samples < 0 )
-        return nullptr;
-    //
-    while( got_samples > 0 )
-        got_samples = swr_convert(swr_ctx,oframe->data,nb_samples,nullptr,0);
-    return oframe;
-}
 

@@ -9,7 +9,7 @@ class QSliderButton : public QToolButton
 {
     Q_OBJECT
 public:
-    explicit QSliderButton(const QString & title, const QString & unit = "%", QWidget *parent = nullptr);
+    explicit QSliderButton(const QString & title, const QString & unit = QStringLiteral("%"), QWidget *parent = nullptr);
     virtual ~QSliderButton();
     int value() const;
     void init(int vmin, int v, int vmax, int singleStep = -1, int pageStep = -1);

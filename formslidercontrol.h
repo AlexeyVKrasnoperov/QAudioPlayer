@@ -14,7 +14,7 @@ class FormSliderControl : public QWidget
 {
     Q_OBJECT
 public:
-    explicit FormSliderControl(const QString & title, const QString & unit, QWidget *parent = 0, int id = -1);
+    explicit FormSliderControl(const QString & title, const QString & unit, QWidget *parent = nullptr, int id = -1);
     ~FormSliderControl();
     void init(int min, int v, int max, int step = 1, int pageStep = 10);
     void initLabels(const QString & title, const QString & unit = QString());

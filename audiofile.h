@@ -26,43 +26,39 @@ protected:
     static FileFormatVector audioFormats;
     static QStringList audioFileFilters;
     //
-    AudioBuffer *buffer;
+    AudioBuffer *buffer = nullptr;
     QString    fileName;
     //
     AVFrame *iframe;
-    AVFrame *oframe;
     AVCodecContext  *codecContext;
     AVFormatContext *formatContext;
-    SwrContext * swr_ctx;
     //
-    AVFrame *alloc_audio_frame(AVSampleFormat sample_fmt, uint64_t channel_layout, int sample_rate, int nb_samples);
-    //   
-    AVSampleFormat getAVSampleFormat(AudioBuffer *b)
+    static AVSampleFormat getAVSampleFormat(QAudioFormat & b)
     {
-        int ssb = b->sampleSize()/8;
+        int ssb = b.sampleSize()/8;
         if( ssb == 1 )
         {
-            if( b->sampleType() == QAudioFormat::UnSignedInt )
+            if( b.sampleType() == QAudioFormat::UnSignedInt )
                 return AV_SAMPLE_FMT_U8;
         }
         else if( ssb == 2 )
         {
-            if( b->sampleType() == QAudioFormat::SignedInt )
+            if( b.sampleType() == QAudioFormat::SignedInt )
                 return AV_SAMPLE_FMT_S16;
         }
         else if( ssb == 4 )
         {
-            if( b->sampleType() == QAudioFormat::Float )
+            if( b.sampleType() == QAudioFormat::Float )
                 return AV_SAMPLE_FMT_FLT;
-            else if( b->sampleType() == QAudioFormat::SignedInt )
+            else if( b.sampleType() == QAudioFormat::SignedInt )
                 return AV_SAMPLE_FMT_S32;
         }
         return AV_SAMPLE_FMT_NONE;
     }
     //
-    int getAVChannelLayout(AudioBuffer *b)
+    static int getAVChannelLayout(QAudioFormat & b)
     {
-        return (b->channelCount() == 1) ? AV_CH_LAYOUT_MONO : AV_CH_LAYOUT_STEREO;
+        return (b.channelCount() == 1) ? AV_CH_LAYOUT_MONO : AV_CH_LAYOUT_STEREO;
     }
     //
     QAudioFormat::SampleType getSampleType(AVSampleFormat format)
@@ -77,12 +73,13 @@ protected:
     virtual void release();
     //
 public:
-    AudioFile(AudioBuffer *b = 0);
+    AudioFile();
     virtual ~AudioFile();
     AudioBuffer * getBuffer()
     {
         return buffer;
     }
+    static AudioBuffer * Convert(AudioBuffer * in, QAudioFormat & oFormat);
 };
 
 #endif // AUDIOFILE_H

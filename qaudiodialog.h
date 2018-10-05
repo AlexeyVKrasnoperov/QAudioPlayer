@@ -19,7 +19,7 @@ class QAudioDialog : public QDialog
     Q_OBJECT
 
 public:
-    explicit QAudioDialog(QWidget *parent = 0);
+    explicit QAudioDialog(QWidget *parent = nullptr);
     ~QAudioDialog();
 
 private slots:

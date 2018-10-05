@@ -12,7 +12,7 @@ class OutputAudioFormatForm : public QWidget
     Q_OBJECT
 
 public:
-    explicit OutputAudioFormatForm(QWidget *parent = 0);
+    explicit OutputAudioFormatForm(QWidget *parent = nullptr);
     ~OutputAudioFormatForm();
 
 private:

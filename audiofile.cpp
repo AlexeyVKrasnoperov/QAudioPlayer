@@ -12,58 +12,44 @@ bool AudioFile::ffmpegInit = false;
 FileFormatVector AudioFile::audioFormats;
 QStringList AudioFile::audioFileFilters;
 
-AVFrame * AudioFile::alloc_audio_frame(AVSampleFormat sample_fmt, uint64_t channel_layout, int sample_rate, int nb_samples)
-{
-    AVFrame *f = av_frame_alloc();
-    if( f )
-    {
-        f->format = sample_fmt;
-        f->channel_layout = channel_layout;
-        f->channels = av_get_channel_layout_nb_channels(channel_layout);
-        f->sample_rate = sample_rate;
-        f->nb_samples = nb_samples;
-        if (nb_samples)
-            if(av_frame_get_buffer(f, 0) < 0)
-                av_frame_free(&f);
-    }
-    return f;
-}
-
 void AudioFile::initAudioFileFilters()
 {
     if( ! audioFileFilters.empty() )
         return;
     if( audioFormats.empty() )
     {
-        audioFormats.push_back(FileFormat("mp2","MPEG-1/2 Audio Layer II"));
-        audioFormats.push_back(FileFormat("mp3","MPEG-1/2 Audio Layer III"));
-        audioFormats.push_back(FileFormat("wma","Windows Media Audio"));
-        audioFormats.push_back(FileFormat("mp4","MPEG-4 Part 14"));
-        audioFormats.push_back(FileFormat("flac","Free Lossless Audio Codec"));
-        audioFormats.push_back(FileFormat("mka","Matroska"));
-        audioFormats.push_back(FileFormat("wav","Wave Audio"));
-        audioFormats.push_back(FileFormat("asf","Advanced Systems Format"));
-        audioFormats.push_back(FileFormat("flv","Flash Video"));
-        audioFormats.push_back(FileFormat("aiff","Audio Interchange File Format"));
-        audioFormats.push_back(FileFormat("tta","True Audio"));
-        audioFormats.push_back(FileFormat("wv","WavPack"));
-        audioFormats.push_back(FileFormat("aac","Advanced Audio Coding"));
-//        audioFormats.push_back(FileFormat("m4a","Advanced Audio Coding"));
-        audioFormats.push_back(FileFormat("ogg","Ogg Vorbis"));
+        audioFormats.push_back(FileFormat(QStringLiteral("mp2"),QStringLiteral("MPEG-1/2 Audio Layer II")));
+        audioFormats.push_back(FileFormat(QStringLiteral("mp3"),QStringLiteral("MPEG-1/2 Audio Layer III")));
+        audioFormats.push_back(FileFormat(QStringLiteral("wma"),QStringLiteral("Windows Media Audio")));
+        audioFormats.push_back(FileFormat(QStringLiteral("mp4"),QStringLiteral("MPEG-4 Part 14")));
+        audioFormats.push_back(FileFormat(QStringLiteral("flac"),QStringLiteral("Free Lossless Audio Codec")));
+        audioFormats.push_back(FileFormat(QStringLiteral("mka"),QStringLiteral("Matroska")));
+        audioFormats.push_back(FileFormat(QStringLiteral("wav"),QStringLiteral("Wave Audio")));
+        audioFormats.push_back(FileFormat(QStringLiteral("asf"),QStringLiteral("Advanced Systems Format")));
+        audioFormats.push_back(FileFormat(QStringLiteral("flv"),QStringLiteral("Flash Video")));
+        audioFormats.push_back(FileFormat(QStringLiteral("aiff"),QStringLiteral("Audio Interchange File Format")));
+        audioFormats.push_back(FileFormat(QStringLiteral("tta"),QStringLiteral("True Audio")));
+        audioFormats.push_back(FileFormat(QStringLiteral("wv"),QStringLiteral("WavPack")));
+        audioFormats.push_back(FileFormat(QStringLiteral("aac"),QStringLiteral("Advanced Audio Coding")));
+        audioFormats.push_back(FileFormat(QStringLiteral("m4a"),QStringLiteral("Advanced Audio Coding")));
+        audioFormats.push_back(FileFormat(QStringLiteral("ogg"),QStringLiteral("Ogg Vorbis")));
     }
     QString allFormats;
     for( const auto & format : audioFormats)
     {
-        QString filter(QObject::tr("Файл формата "));
+        QString filter(QObject::tr("Audio format "));
         //filter += QString(audioFileFormats[i].extension).toUpper();
         filter += format.description;
-        filter += QString(" (*.%1)").arg(format.extension);
+        filter += QStringLiteral(" (*.");
+        filter += format.extension;
+        filter += QStringLiteral(")");
         audioFileFilters << filter;
         if( ! allFormats.isEmpty() )
             allFormats.append(" ");
-        allFormats += QString("*.%1").arg(format.extension);
+        allFormats += QStringLiteral("*.");
+        allFormats += format.extension;
     }
-    allFormats.prepend(QObject::tr("Все поддерживаемые форматы ("));
+    allFormats.prepend(QObject::tr("All supported formats ("));
     allFormats.append(QObject::tr(")"));
     audioFileFilters << allFormats;
 }
@@ -108,22 +94,17 @@ const QString & AudioFile::getSelectedAudioFileSuffix(const QString & selected)
     return audioFormats.front().extension;
 }
 
-AudioFile::AudioFile(AudioBuffer *b):buffer(b)
+AudioFile::AudioFile()
 {
     if( ! ffmpegInit )
     {
-        av_log_set_level(AV_LOG_TRACE);
+        av_log_set_level(AV_LOG_QUIET);
         ffmpegInit = true;
     }
+    buffer = nullptr;
     iframe = nullptr;
-    oframe = nullptr;
     codecContext  = nullptr;
     formatContext = nullptr;
-    swr_ctx = nullptr;
-    //
-    if( buffer == nullptr )
-        buffer = new AudioBuffer();
-//        buffer = new AudioBuffer( QAudioDeviceInfo::defaultOutputDevice().preferredFormat() );
 }
 
 AudioFile::~AudioFile()
@@ -140,16 +121,49 @@ void AudioFile::release()
     }
     if( formatContext != nullptr )
     {
-//        if( formatContext->iformat != 0 )
-//            avformat_close_input(&formatContext);
-//        else
         avformat_free_context(formatContext);
         formatContext = nullptr;
     }
     if( iframe != nullptr )
         av_frame_free(&iframe);
-    if( oframe != nullptr )
-        av_frame_free(&oframe);
-    if( swr_ctx )
+}
+
+AudioBuffer * AudioFile::Convert(AudioBuffer * in, QAudioFormat & oFormat)
+{
+    if( (in == nullptr) || ! oFormat.isValid() || in->isEmpty() )
+        return nullptr;
+    if( *in == oFormat )
+        return in;
+    if( ! ffmpegInit )
+    {
+        av_log_set_level(AV_LOG_QUIET);
+        ffmpegInit = true;
+    }
+    SwrContext * swr_ctx = swr_alloc_set_opts(nullptr,getAVChannelLayout(oFormat), getAVSampleFormat(oFormat),
+                                              oFormat.sampleRate(),getAVChannelLayout(*in),
+                                              getAVSampleFormat(*in),in->sampleRate(),0, nullptr);
+    if( ! swr_ctx )
+        return nullptr;
+    if( swr_init(swr_ctx) < 0)
+    {
         swr_free(&swr_ctx);
+        return nullptr;
+    }
+    auto nb_samples = int(av_rescale_rnd(int64_t(in->frameCount()),int64_t(oFormat.sampleRate()),int64_t(in->sampleRate()),AV_ROUND_UP));
+    auto *out = new AudioBuffer(oFormat);
+    out->resize(nb_samples*out->sampleSize()/8*out->channelCount());
+    auto *out_samples = reinterpret_cast<uint8_t*>(out->data());
+    auto *in_samples  = reinterpret_cast<const uint8_t*>(in->data());
+    int got_samples = swr_convert(swr_ctx,&out_samples,nb_samples,&in_samples,in->frameCount());
+    if( got_samples < 0 )
+    {
+        delete out;
+        swr_free(&swr_ctx);
+        return nullptr;
+    }
+    while( got_samples > 0 )
+        got_samples = swr_convert(swr_ctx,&out_samples,nb_samples,nullptr,0);
+    swr_free(&swr_ctx);
+    out->setObjectName(in->objectName());
+    return out;
 }

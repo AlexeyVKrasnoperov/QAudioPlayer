@@ -3,9 +3,9 @@
 
 int main(int argc, char *argv[])
 {
-    QCoreApplication::setApplicationName("QAudioPlayer");
-    QCoreApplication::setOrganizationName("QAudioPlayer");
-    QCoreApplication::setApplicationVersion("1.0");
+    QCoreApplication::setApplicationName(QStringLiteral("QAudioPlayer"));
+    QCoreApplication::setOrganizationName(QStringLiteral("QAudioPlayer"));
+    QCoreApplication::setApplicationVersion(QStringLiteral("1.0"));
     QApplication a(argc, argv);
     QAudioDialog w;
     w.show();

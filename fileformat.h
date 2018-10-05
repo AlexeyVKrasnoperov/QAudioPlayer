@@ -1,6 +1,10 @@
 #ifndef FILEFORMAT_H
 #define FILEFORMAT_H
 
+#include <QString>
+#include <vector>
+using namespace std;
+
 struct FileFormat
 {
     QString extension;

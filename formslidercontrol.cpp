@@ -10,9 +10,9 @@ FormSliderControl::FormSliderControl(const QString & title, const QString & unit
     sliderPressed = false;
     ui->labelTitle->setText(title);
     ui->labelUnit->setText(unit);
-    connect(ui->horizontalSlider,SIGNAL(sliderPressed()),this,SLOT(sliderPressedSlot()));
-    connect(ui->horizontalSlider,SIGNAL(sliderReleased()),this,SLOT(sliderReleasedSlot()));
-    connect(ui->horizontalSlider,SIGNAL(valueChanged(int)),this,SLOT(valueChangedSlot(int)));
+    connect(ui->horizontalSlider,&QSlider::sliderPressed,this,&FormSliderControl::sliderPressedSlot);
+    connect(ui->horizontalSlider,&QSlider::sliderReleased,this,&FormSliderControl::sliderReleasedSlot);
+    connect(ui->horizontalSlider,&QSlider::valueChanged,this,&FormSliderControl::valueChangedSlot);
 }
 
 FormSliderControl::~FormSliderControl()
@@ -52,7 +52,7 @@ void FormSliderControl::init(int min, int v, int max, int step, int pageStep)
     ui->horizontalSlider->setPageStep(pageStep);
     ui->labelValue->setAlignment(Qt::AlignVCenter|Qt::AlignRight);
     int l = QString::number(max).length()+1;
-    ui->labelValue->setMinimumWidth(QFontMetrics(ui->labelValue->font()).width("0")*l);
+    ui->labelValue->setMinimumWidth(QFontMetrics(ui->labelValue->font()).width(QStringLiteral("0"))*l);
     ui->labelValue->setText(QString::number(v));
 }
 

@@ -37,7 +37,7 @@ bool Player::open(const QString & name)
     if( fileLoader.isNull())
     {
         fileLoader.reset(new AudioFileLoader());
-        connect(fileLoader.data(),SIGNAL(ready(AudioBuffer*)),this,SLOT(bufferReadySlot(AudioBuffer*)));
+        connect(fileLoader.data(),&AudioFileLoader::ready,this,&Player::bufferReadySlot);
     }
     return fileLoader->Load(name);
 }
@@ -132,7 +132,22 @@ void Player::stateChangedSlot(QAudio::State state)
 void Player::bufferReadySlot(AudioBuffer * original)
 {
     close(); // clear all
-    originalAudioBuffer.reset(original);
+    if( ! outputAudioDeviceInfo.isFormatSupported(*original) )
+    {
+        QAudioFormat format = outputAudioDeviceInfo.nearestFormat(*original);
+        AudioBuffer * b = AudioFile::Convert(original,format);
+        if( (b != nullptr) && (b != original) )
+        {
+            originalAudioBuffer.reset(b);
+            delete original;
+        }
+        else
+            originalAudioBuffer.reset(original);
+    }
+    else
+        originalAudioBuffer.reset(original);
+
+
     emit playerReady(init());
 }
 
@@ -153,9 +168,9 @@ bool Player::init()
     audioBufferDevice->seek(0);
     setNotifyInterval(notifyInterval);
     setVolume();
-    connect(audioOutputDevice.data(),SIGNAL(stateChanged(QAudio::State)),this,SIGNAL(stateChanged(QAudio::State)));
-    connect(audioOutputDevice.data(),SIGNAL(stateChanged(QAudio::State)),this,SLOT(stateChangedSlot(QAudio::State)));
-    connect(audioOutputDevice.data(),SIGNAL(notify()),this,SLOT(notifySlot()));
+    connect(audioOutputDevice.data(),&QAudioOutput::stateChanged,this,&Player::stateChanged);
+    connect(audioOutputDevice.data(),&QAudioOutput::stateChanged,this,&Player::stateChangedSlot);
+    connect(audioOutputDevice.data(),&QAudioOutput::notify,this,&Player::notifySlot);
     return true;
 }
 

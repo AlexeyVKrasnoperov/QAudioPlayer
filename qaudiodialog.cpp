@@ -17,11 +17,11 @@ QAudioDialog::QAudioDialog(QWidget *parent) :
     player = nullptr;
     workingDir = QDir::homePath();
     //
-    ui->labelPosition->setMinimumWidth(QFontMetrics(ui->labelPosition->font()).width("0000.000"));
-    ui->labelPosition->setText("0.000 c");
+    ui->labelPosition->setMinimumWidth(QFontMetrics(ui->labelPosition->font()).width(QStringLiteral("0000.000")));
+    ui->labelPosition->setText(QStringLiteral("0.000 c"));
     ui->labelPosition->setEnabled(false);
     //
-    audioVolume = new QSliderButton(tr("Volume"),"%",this);
+    audioVolume = new QSliderButton(tr("Volume"),QStringLiteral("%"),this);
     audioVolume->setIcon(QIcon(":/icons/audio-volume-medium.png"));
     audioVolume->init(0,50,100);
     ui->horizontalLayoutDevice->addWidget(audioVolume);
@@ -47,11 +47,11 @@ QAudioDialog::QAudioDialog(QWidget *parent) :
     player->setNotifyInterval(10);
     player->setAudioDevice(getSelectedDevice());
     //
-    connect(player,SIGNAL(playerReady(bool)),this,SLOT(playerReadySlot(bool)));
-    connect(player,SIGNAL(started()),this,SLOT(playerStarted()));
-    connect(player,SIGNAL(stoped()),this,SLOT(playerStoped()));
-    connect(player,SIGNAL(currentTimeChanged(qint32)),this,SLOT(playerPositionChanged(qint32)));
-    connect(audioVolume,SIGNAL(valueChanged(int)),player,SLOT(setVolume(int)));
+    connect(player,&Player::playerReady,this,&QAudioDialog::playerReadySlot);
+    connect(player,&Player::started,this,&QAudioDialog::playerStarted);
+    connect(player,&Player::stoped,this,&QAudioDialog::playerStoped);
+    connect(player,&Player::currentTimeChanged,this,&QAudioDialog::playerPositionChanged);
+    connect(audioVolume,&QSliderButton::valueChanged,player,&Player::setVolume);
     //
     adjustSize();
     setFixedSize(size());
@@ -74,7 +74,7 @@ void QAudioDialog::on_pushButtonOpen_clicked()
         workingDir = QDir::homePath();
     QString selectedFilter(audioFileSuffixLoad);
     QStringList filters = AudioFile::getAudioFileFilters(selectedFilter);
-    QString fileName = QFileDialog::getOpenFileName(this,tr("Open file"),workingDir,filters.join(";;"),
+    QString fileName = QFileDialog::getOpenFileName(this,tr("Open file"),workingDir,filters.join(QStringLiteral(";;")),
                                                     &selectedFilter,QFileDialog::DontUseNativeDialog);
     if( fileName.isEmpty() )
         return;
@@ -191,13 +191,13 @@ QAudioDeviceInfo QAudioDialog::getSelectedDevice()
 void QAudioDialog::readSettings()
 {
     QSettings settings;
-    settings.beginGroup("QAudioDialog");
-    restoreGeometry(settings.value("geometry").toByteArray());
-    workingDir = settings.value("workingDir",QDir::homePath()).toString();
-    audioFileSuffixLoad = settings.value("audioFileSuffixLoad").toString();
-    ui->pushButtonLoop->setChecked(settings.value("loop",true).toBool());
-    audioVolume->setValue(settings.value("volume",50).toInt());
-    int idx = ui->comboBoxOutputDevice->findText(settings.value("device").toString());
+    settings.beginGroup(QStringLiteral("QAudioDialog"));
+    restoreGeometry(settings.value(QStringLiteral("geometry")).toByteArray());
+    workingDir = settings.value(QStringLiteral("workingDir"),QDir::homePath()).toString();
+    audioFileSuffixLoad = settings.value(QStringLiteral("audioFileSuffixLoad")).toString();
+    ui->pushButtonLoop->setChecked(settings.value(QStringLiteral("loop"),true).toBool());
+    audioVolume->setValue(settings.value(QStringLiteral("volume"),50).toInt());
+    int idx = ui->comboBoxOutputDevice->findText(settings.value(QStringLiteral("device")).toString());
     if( idx != -1 )
         ui->comboBoxOutputDevice->setCurrentIndex(idx);
     settings.endGroup();
@@ -206,13 +206,13 @@ void QAudioDialog::readSettings()
 void QAudioDialog::writeSettings()
 {
     QSettings settings;
-    settings.beginGroup("QAudioDialog");
-    settings.setValue("geometry",saveGeometry());
-    settings.setValue("workingDir",workingDir);
-    settings.setValue("audioFileSuffixLoad",audioFileSuffixLoad);
-    settings.setValue("loop",ui->pushButtonLoop->isChecked());
-    settings.setValue("volume",audioVolume->value());
-    settings.setValue("device",ui->comboBoxOutputDevice->currentText());
+    settings.beginGroup(QStringLiteral("QAudioDialog"));
+    settings.setValue(QStringLiteral("geometry"),saveGeometry());
+    settings.setValue(QStringLiteral("workingDir"),workingDir);
+    settings.setValue(QStringLiteral("audioFileSuffixLoad"),audioFileSuffixLoad);
+    settings.setValue(QStringLiteral("loop"),ui->pushButtonLoop->isChecked());
+    settings.setValue(QStringLiteral("volume"),audioVolume->value());
+    settings.setValue(QStringLiteral("device"),ui->comboBoxOutputDevice->currentText());
     settings.endGroup();
 }
 
