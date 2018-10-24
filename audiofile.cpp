@@ -152,6 +152,7 @@ AudioBuffer * AudioFile::Convert(AudioBuffer * in, QAudioFormat & oFormat)
     auto nb_samples = int(av_rescale_rnd(int64_t(in->frameCount()),int64_t(oFormat.sampleRate()),int64_t(in->sampleRate()),AV_ROUND_UP));
     auto *out = new AudioBuffer(oFormat);
     out->resize(nb_samples*out->sampleSize()/8*out->channelCount());
+    out->fill(0);
     auto *out_samples = reinterpret_cast<uint8_t*>(out->data());
     auto *in_samples  = reinterpret_cast<const uint8_t*>(in->data());
     int got_samples = swr_convert(swr_ctx,&out_samples,nb_samples,&in_samples,in->frameCount());
